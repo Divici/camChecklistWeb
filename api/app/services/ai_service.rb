@@ -147,14 +147,16 @@ class AiService
     item_ids = input["item_ids"] || input[:item_ids] || []
     reasoning = input["reasoning"] || input[:reasoning] || ""
 
-    # Mark items as completed
+    # Mark items as completed (wrapped in transaction for atomicity)
     checked_items = []
-    item_ids.each do |id|
-      item = @items.find { |i| i.id == id }
-      next unless item && !item.completed?
+    ActiveRecord::Base.transaction do
+      item_ids.each do |id|
+        item = @items.find { |i| i.id == id }
+        next unless item && !item.completed?
 
-      item.update!(completed: true, completed_via: completed_via, completed_at: Time.current)
-      checked_items << item
+        item.update!(completed: true, completed_via: completed_via, completed_at: Time.current)
+        checked_items << item
+      end
     end
 
     { checked_items: checked_items.map(&:as_json), reasoning: reasoning }
