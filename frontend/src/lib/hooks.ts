@@ -5,7 +5,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { apiFetch } from "./api";
+import { apiFetch, API_BASE } from "./api";
 import type { Project, Checklist, Item } from "./types";
 
 // ── Queries ──
@@ -193,6 +193,53 @@ export function useDeleteItem(checklistId: number | string) {
       qc.invalidateQueries({
         queryKey: ["checklists", checklistId, "items"],
       });
+    },
+  });
+}
+
+// ── AI Mutations ──
+
+export function useVoiceCheck(checklistId: number | string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (transcript: string) => {
+      return apiFetch<{ checked_items: Item[]; reasoning: string }>(
+        `/checklists/${checklistId}/voice`,
+        { method: "POST", body: JSON.stringify({ transcript }) }
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+    },
+  });
+}
+
+export function usePhotoCheck(checklistId: number | string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (imageFile: File) => {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      const res = await fetch(
+        `${API_BASE}/api/v1/checklists/${checklistId}/photo`,
+        { method: "POST", body: formData }
+      );
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json() as Promise<{ checked_items: Item[]; reasoning: string }>;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+    },
+  });
+}
+
+export function useAskQuestion(checklistId: number | string) {
+  return useMutation({
+    mutationFn: async (question: string) => {
+      return apiFetch<{ answer: string; related_items: Item[] }>(
+        `/checklists/${checklistId}/ask`,
+        { method: "POST", body: JSON.stringify({ question }) }
+      );
     },
   });
 }

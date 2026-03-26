@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -9,8 +10,22 @@ import {
   Camera,
   Mic,
   Video,
+  X,
+  Upload,
+  Loader2,
+  Send,
 } from "lucide-react";
-import { useProject, useChecklist, useItems, useToggleItem } from "@/lib/hooks";
+import {
+  useProject,
+  useChecklist,
+  useItems,
+  useToggleItem,
+  useVoiceCheck,
+  usePhotoCheck,
+} from "@/lib/hooks";
+import { useVoiceRecognition } from "@/hooks/use-voice-recognition";
+import { useCamera } from "@/hooks/use-camera";
+import { resizeImage } from "@/lib/image-utils";
 import { ConfirmationToast } from "@/components/confirmation-toast";
 import type { Item } from "@/lib/types";
 
@@ -21,14 +36,132 @@ export default function ChecklistPage() {
   const { data: checklist } = useChecklist(projectId, id);
   const { data: items } = useItems(id);
   const toggleItem = useToggleItem(id);
+  const voiceCheck = useVoiceCheck(id);
+  const photoCheck = usePhotoCheck(id);
 
-  const lastVoiceCompleted = items?.find(
-    (i) => i.completed && i.completed_via === "voice"
+  // UI state
+  const [showCamera, setShowCamera] = useState(false);
+  const [textFallback, setTextFallback] = useState("");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Voice recognition
+  const {
+    isListening,
+    isSupported: voiceSupported,
+    startListening,
+    stopListening,
+  } = useVoiceRecognition({
+    onResult: (transcript) => {
+      voiceCheck.mutate(transcript, {
+        onSuccess: (data) => {
+          const names = data.checked_items.map((i) => i.text).join(", ");
+          setToastMessage(names ? `Checked: ${names}` : data.reasoning);
+          setTimeout(() => setToastMessage(null), 4000);
+        },
+        onError: () => {
+          setErrorMessage("Voice check failed. Try again.");
+          setTimeout(() => setErrorMessage(null), 4000);
+        },
+      });
+    },
+    onError: (err) => {
+      setErrorMessage(`Voice error: ${err}`);
+      setTimeout(() => setErrorMessage(null), 4000);
+    },
+  });
+
+  // Camera
+  const {
+    isCapturing,
+    preview,
+    videoRef,
+    startCamera,
+    capturePhoto,
+    stopCamera,
+    handleFileUpload,
+  } = useCamera();
+
+  const handleMicPress = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  }, [isListening, startListening, stopListening]);
+
+  const handleTextSubmit = useCallback(() => {
+    const text = textFallback.trim();
+    if (!text) return;
+    voiceCheck.mutate(text, {
+      onSuccess: (data) => {
+        const names = data.checked_items.map((i) => i.text).join(", ");
+        setToastMessage(names ? `Checked: ${names}` : data.reasoning);
+        setTextFallback("");
+        setTimeout(() => setToastMessage(null), 4000);
+      },
+      onError: () => {
+        setErrorMessage("AI check failed. Try again.");
+        setTimeout(() => setErrorMessage(null), 4000);
+      },
+    });
+  }, [textFallback, voiceCheck]);
+
+  const handleCameraOpen = useCallback(() => {
+    setShowCamera(true);
+    startCamera();
+  }, [startCamera]);
+
+  const handleCameraClose = useCallback(() => {
+    stopCamera();
+    setShowCamera(false);
+  }, [stopCamera]);
+
+  const handleCapture = useCallback(async () => {
+    const file = await capturePhoto();
+    if (!file) return;
+    stopCamera();
+    setShowCamera(false);
+    photoCheck.mutate(file, {
+      onSuccess: (data) => {
+        const names = data.checked_items.map((i) => i.text).join(", ");
+        setToastMessage(names ? `Photo checked: ${names}` : data.reasoning);
+        setTimeout(() => setToastMessage(null), 4000);
+      },
+      onError: () => {
+        setErrorMessage("Photo check failed. Try again.");
+        setTimeout(() => setErrorMessage(null), 4000);
+      },
+    });
+  }, [capturePhoto, stopCamera, photoCheck]);
+
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      handleFileUpload(file);
+      const resized = await resizeImage(file);
+      photoCheck.mutate(resized, {
+        onSuccess: (data) => {
+          const names = data.checked_items.map((i) => i.text).join(", ");
+          setToastMessage(names ? `Photo checked: ${names}` : data.reasoning);
+          setTimeout(() => setToastMessage(null), 4000);
+        },
+        onError: () => {
+          setErrorMessage("Photo check failed. Try again.");
+          setTimeout(() => setErrorMessage(null), 4000);
+        },
+      });
+    },
+    [handleFileUpload, photoCheck]
   );
 
   function handleToggle(item: Item) {
     toggleItem.mutate({ itemId: item.id, completed: !item.completed });
   }
+
+  const isAiProcessing = voiceCheck.isPending || photoCheck.isPending;
 
   // Sort: completed first, then by position
   const sortedItems = items
@@ -69,11 +202,23 @@ export default function ChecklistPage() {
 
       {/* Checklist Canvas */}
       <div className="space-y-4">
-        {/* Voice confirmation toast */}
-        {lastVoiceCompleted && (
-          <ConfirmationToast
-            message={`"${lastVoiceCompleted.text}" confirmed`}
-          />
+        {/* Toast messages */}
+        {toastMessage && <ConfirmationToast message={toastMessage} />}
+
+        {errorMessage && (
+          <div className="bg-error text-on-error px-6 py-4 rounded-2xl flex items-center gap-3 shadow-lg mb-8">
+            <span className="font-headline font-semibold">{errorMessage}</span>
+          </div>
+        )}
+
+        {/* AI Processing Indicator */}
+        {isAiProcessing && (
+          <div className="bg-tertiary-container text-on-tertiary-container px-6 py-4 rounded-2xl flex items-center gap-3 shadow-lg mb-4 animate-pulse">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="font-headline font-semibold">
+              AI is processing...
+            </span>
+          </div>
         )}
 
         {/* Item List */}
@@ -103,7 +248,9 @@ export default function ChecklistPage() {
                     <p className="text-xs font-label text-secondary font-semibold uppercase tracking-wider">
                       {item.completed_via === "voice"
                         ? "Completed via Voice"
-                        : "Completed"}
+                        : item.completed_via === "photo"
+                          ? "Completed via Photo"
+                          : "Completed"}
                     </p>
                   </div>
                   <GripVertical className="w-5 h-5 text-on-surface-variant opacity-40" />
@@ -169,38 +316,130 @@ export default function ChecklistPage() {
         </div>
       </div>
 
+      {/* Text fallback for browsers without Web Speech API */}
+      {!voiceSupported && (
+        <div className="fixed bottom-44 left-0 w-full px-6 flex justify-center z-30">
+          <div className="bg-surface-container backdrop-blur-xl p-3 rounded-2xl w-full max-w-md flex items-center gap-2 shadow-lg">
+            <input
+              type="text"
+              value={textFallback}
+              onChange={(e) => setTextFallback(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleTextSubmit()}
+              placeholder="Type what you completed..."
+              className="flex-1 bg-transparent px-3 py-2 text-on-surface font-body outline-none"
+            />
+            <button
+              onClick={handleTextSubmit}
+              disabled={!textFallback.trim() || voiceCheck.isPending}
+              className="p-2 rounded-full bg-primary text-on-primary disabled:opacity-50"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Camera Capture Modal */}
+      {showCamera && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center p-6">
+          <div className="w-full max-w-lg bg-surface rounded-3xl overflow-hidden">
+            <div className="flex items-center justify-between p-4">
+              <h3 className="font-headline font-bold text-on-surface">
+                Capture Photo
+              </h3>
+              <button
+                onClick={handleCameraClose}
+                className="p-2 rounded-full hover:bg-surface-container-high"
+              >
+                <X className="w-5 h-5 text-on-surface" />
+              </button>
+            </div>
+            <div className="relative aspect-[4/3] bg-black">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex items-center justify-center gap-4 p-6">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-3 rounded-full bg-surface-container-high text-on-surface-variant"
+              >
+                <Upload className="w-6 h-6" />
+              </button>
+              <button
+                onClick={handleCapture}
+                className="w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-xl"
+              >
+                <Camera className="w-8 h-8" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
       {/* Voice/Camera HUD */}
       <div className="fixed bottom-24 left-0 w-full px-6 flex justify-center items-end pointer-events-none z-30">
         <div className="bg-surface-variant/60 backdrop-blur-xl p-6 rounded-[2.5rem] w-full max-w-md flex items-center justify-between pointer-events-auto shadow-2xl">
           {/* Camera Button */}
-          <button className="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+          <button
+            onClick={handleCameraOpen}
+            disabled={isAiProcessing}
+            className="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors disabled:opacity-50"
+          >
             <Camera className="w-6 h-6" />
           </button>
 
           {/* Mic Button */}
           <div className="relative">
-            <button className="w-24 h-24 rounded-full bg-gradient-to-br from-tertiary to-tertiary-container flex items-center justify-center text-on-tertiary shadow-xl z-10 relative">
+            <button
+              onClick={handleMicPress}
+              disabled={isAiProcessing}
+              className={`w-24 h-24 rounded-full flex items-center justify-center shadow-xl z-10 relative transition-all disabled:opacity-50 ${
+                isListening
+                  ? "bg-gradient-to-br from-error to-error-container text-on-error animate-pulse"
+                  : "bg-gradient-to-br from-tertiary to-tertiary-container text-on-tertiary"
+              }`}
+            >
               <Mic className="w-10 h-10" />
             </button>
-            {/* Decorative waveform */}
-            <div className="absolute -top-4 -right-2 flex gap-1 items-center">
-              <div
-                className="w-1 h-4 bg-tertiary-fixed-dim rounded-full animate-bounce"
-                style={{ animationDelay: "0.1s" }}
-              />
-              <div
-                className="w-1 h-8 bg-tertiary-fixed rounded-full animate-bounce"
-                style={{ animationDelay: "0.3s" }}
-              />
-              <div
-                className="w-1 h-6 bg-tertiary-fixed-dim rounded-full animate-bounce"
-                style={{ animationDelay: "0.2s" }}
-              />
-            </div>
+            {/* Decorative waveform — only when listening */}
+            {isListening && (
+              <div className="absolute -top-4 -right-2 flex gap-1 items-center">
+                <div
+                  className="w-1 h-4 bg-tertiary-fixed-dim rounded-full animate-bounce"
+                  style={{ animationDelay: "0.1s" }}
+                />
+                <div
+                  className="w-1 h-8 bg-tertiary-fixed rounded-full animate-bounce"
+                  style={{ animationDelay: "0.3s" }}
+                />
+                <div
+                  className="w-1 h-6 bg-tertiary-fixed-dim rounded-full animate-bounce"
+                  style={{ animationDelay: "0.2s" }}
+                />
+              </div>
+            )}
           </div>
 
-          {/* Video Button */}
-          <button className="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+          {/* Video / Upload Button */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isAiProcessing}
+            className="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors disabled:opacity-50"
+          >
             <Video className="w-6 h-6" />
           </button>
         </div>
