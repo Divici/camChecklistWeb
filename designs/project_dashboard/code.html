@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-container": "#9d4400",
+                        "on-surface": "#181c1e",
+                        "on-background": "#181c1e",
+                        "on-secondary-container": "#217128",
+                        "surface-bright": "#f7fafc",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#ffcfb6",
+                        "inverse-surface": "#2d3133",
+                        "primary-container": "#0056d2",
+                        "surface-dim": "#d7dadc",
+                        "surface": "#f7fafc",
+                        "surface-container-highest": "#e0e3e5",
+                        "tertiary-fixed-dim": "#ffb68f",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f1f4f6",
+                        "surface-container": "#ebeef0",
+                        "on-primary-container": "#ccd8ff",
+                        "on-secondary-fixed-variant": "#005312",
+                        "secondary-fixed-dim": "#88d982",
+                        "on-primary-fixed-variant": "#0040a1",
+                        "on-surface-variant": "#424654",
+                        "tertiary-fixed": "#ffdbca",
+                        "secondary": "#1b6d24",
+                        "primary": "#0040a1",
+                        "on-secondary-fixed": "#002204",
+                        "surface-container-high": "#e5e9eb",
+                        "on-tertiary-fixed": "#331200",
+                        "surface-tint": "#0056d2",
+                        "on-primary-fixed": "#001847",
+                        "primary-fixed": "#dae2ff",
+                        "primary-fixed-dim": "#b2c5ff",
+                        "secondary-container": "#a0f399",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e0e3e5",
+                        "on-tertiary-fixed-variant": "#773200",
+                        "inverse-on-surface": "#eef1f3",
+                        "background": "#f7fafc",
+                        "inverse-primary": "#b2c5ff",
+                        "on-secondary": "#ffffff",
+                        "outline": "#737785",
+                        "outline-variant": "#c3c6d6",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#a3f69c",
+                        "tertiary": "#773200"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pulse-animation-on-mic-icon {
+            box-shadow: 0 0 0 0 rgba(0, 64, 161, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 64, 161, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 64, 161, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 64, 161, 0); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest text-on-surface font-body min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-slate-50 dark:bg-slate-950 flex justify-between items-center w-full px-6 h-16 sticky top-0 z-50">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Close-up portrait of a professional man with a kind expression in a bright modern office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAziUqPfI33w8xP4jh65sAnCKMRhMAmBzcJtcPsDgo5w4lXKrVviX9vKLyY5j6soN9-XNukTFTZr8fqySnSnMqVvy2YeIcvfoOfHyP98jhEK7LBBs8_ca1PvSgEvC04XK4KZHagKwpnZGI15hkyFOWpBgX250PyC43iF7Q4FiKsW4dDSfpON2T9FA5FQ_4R5DAEJugdS1lV2f7hV8JIFUEkOlHAoyv-5Mpbwc3SmCeh1KAxhgAHNdWkUfj7Y3C8-pfk1isr3k4DPUI"/>
+</div>
+<h1 class="font-manrope font-extrabold text-blue-800 dark:text-blue-300 tracking-tight text-xl">CheckVoice</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors active:duration-100 scale-95">
+<span class="material-symbols-outlined text-blue-700 dark:text-blue-400">add</span>
+</button>
+</header>
+<main class="px-6 pt-8 max-w-2xl mx-auto">
+<!-- Editorial Header Section -->
+<section class="mb-10">
+<span class="font-inter text-xs tracking-wider uppercase text-outline mb-2 block">Active Workspace</span>
+<h2 class="font-headline font-bold text-[1.75rem] leading-tight text-on-surface">Your Projects</h2>
+<p class="text-on-surface-variant mt-2 text-lg">You have 3 active projects today.</p>
+</section>
+<!-- Bento Grid Layout for Projects -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Project Card 1: Home Renovation -->
+<div class="bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high group">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline font-bold text-xl text-on-surface group-hover:text-primary transition-colors">Home Renovation</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-sm text-outline">list_alt</span>
+<span class="font-label text-xs tracking-tight text-on-surface-variant uppercase">12 Checklists</span>
+</div>
+</div>
+<div class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold">In Progress</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<span class="font-label text-xs font-semibold text-outline">4/10 tasks completed</span>
+<span class="font-headline font-bold text-primary italic">40%</span>
+</div>
+<div class="h-3 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 40%"></div>
+</div>
+</div>
+</div>
+<!-- Project Card 2: Weekly Chores -->
+<div class="bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high group">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline font-bold text-xl text-on-surface group-hover:text-primary transition-colors">Weekly Chores</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-sm text-outline">list_alt</span>
+<span class="font-label text-xs tracking-tight text-on-surface-variant uppercase">5 Checklists</span>
+</div>
+</div>
+<div class="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-xs font-bold">On Track</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<span class="font-label text-xs font-semibold text-outline">8/10 tasks completed</span>
+<span class="font-headline font-bold text-secondary italic">80%</span>
+</div>
+<div class="h-3 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 80%"></div>
+</div>
+</div>
+</div>
+<!-- Project Card 3: Client Prep -->
+<div class="bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high group border-l-4 border-tertiary">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline font-bold text-xl text-on-surface group-hover:text-primary transition-colors">Client Prep</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-sm text-outline">list_alt</span>
+<span class="font-label text-xs tracking-tight text-on-surface-variant uppercase">3 Checklists</span>
+</div>
+</div>
+<div class="bg-tertiary-container/10 text-tertiary-container px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">High Priority</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<span class="font-label text-xs font-semibold text-outline">1/5 tasks completed</span>
+<span class="font-headline font-bold text-tertiary italic">20%</span>
+</div>
+<div class="h-3 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary rounded-full" style="width: 20%"></div>
+</div>
+</div>
+</div>
+<!-- New Project Action Card -->
+<button class="flex flex-col items-center justify-center border-2 border-dashed border-outline-variant rounded-xl p-8 hover:bg-surface-container-low transition-colors group">
+<div class="w-14 h-14 rounded-full bg-primary/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl">add_circle</span>
+</div>
+<span class="font-headline font-bold text-lg text-primary">New Project</span>
+<span class="font-body text-sm text-outline mt-1">Start a fresh checklist journey</span>
+</button>
+</div>
+<!-- Secondary Visual Anchor (Editorial Style) -->
+<section class="mt-12 mb-8 bg-surface-bright rounded-2xl p-6 border-outline-variant border-[15%] relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="font-headline font-bold text-lg mb-2">Voice Assistant Tips</h4>
+<p class="text-body-lg text-on-surface-variant opacity-80 leading-relaxed">Try saying <span class="text-primary font-semibold italic">"Add a task to Home Renovation"</span> while you're on the move.</p>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[120px] text-primary" data-weight="fill">mic</span>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.06)] rounded-t-3xl">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-blue-600 dark:hover:text-blue-400" href="#">
+<span class="material-symbols-outlined mb-1">dashboard</span>
+<span class="font-inter text-[10px] font-medium tracking-tight">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-2xl px-5 py-2" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="font-inter text-[10px] font-medium tracking-tight">Projects</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-blue-600 dark:hover:text-blue-400" href="#">
+<div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-lg -mt-8 pulse-animation-on-mic-icon border-4 border-white dark:border-slate-900">
+<span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">mic</span>
+</div>
+<span class="font-inter text-[10px] font-medium tracking-tight mt-1">Assistant</span>
+</a>
+</nav>
+</body></html>

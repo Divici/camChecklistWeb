@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Project Detail - CheckVoice</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-container": "#9d4400",
+              "on-surface": "#181c1e",
+              "on-background": "#181c1e",
+              "on-secondary-container": "#217128",
+              "surface-bright": "#f7fafc",
+              "on-primary": "#ffffff",
+              "on-tertiary-container": "#ffcfb6",
+              "inverse-surface": "#2d3133",
+              "primary-container": "#0056d2",
+              "surface-dim": "#d7dadc",
+              "surface": "#f7fafc",
+              "surface-container-highest": "#e0e3e5",
+              "tertiary-fixed-dim": "#ffb68f",
+              "error-container": "#ffdad6",
+              "on-error": "#ffffff",
+              "on-error-container": "#93000a",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-low": "#f1f4f6",
+              "surface-container": "#ebeef0",
+              "on-primary-container": "#ccd8ff",
+              "on-secondary-fixed-variant": "#005312",
+              "secondary-fixed-dim": "#88d982",
+              "on-primary-fixed-variant": "#0040a1",
+              "on-surface-variant": "#424654",
+              "tertiary-fixed": "#ffdbca",
+              "secondary": "#1b6d24",
+              "primary": "#0040a1",
+              "on-secondary-fixed": "#002204",
+              "surface-container-high": "#e5e9eb",
+              "on-tertiary-fixed": "#331200",
+              "surface-tint": "#0056d2",
+              "on-primary-fixed": "#001847",
+              "primary-fixed": "#dae2ff",
+              "primary-fixed-dim": "#b2c5ff",
+              "secondary-container": "#a0f399",
+              "on-tertiary": "#ffffff",
+              "surface-variant": "#e0e3e5",
+              "on-tertiary-fixed-variant": "#773200",
+              "inverse-on-surface": "#eef1f3",
+              "background": "#f7fafc",
+              "inverse-primary": "#b2c5ff",
+              "on-secondary": "#ffffff",
+              "outline": "#737785",
+              "outline-variant": "#c3c6d6",
+              "error": "#ba1a1a",
+              "secondary-fixed": "#a3f69c",
+              "tertiary": "#773200"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pulse-animation-on-mic-icon {
+            box-shadow: 0 0 0 0 rgba(0, 64, 161, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 64, 161, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 64, 161, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 64, 161, 0); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest text-on-surface font-body min-h-screen pb-32">
+<header class="bg-slate-50 dark:bg-slate-950 flex justify-between items-center w-full px-6 h-16 fixed top-0 z-50">
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200/50 transition-colors active:duration-100 scale-95">
+<span class="material-symbols-outlined text-slate-500">arrow_back</span>
+</button>
+<h1 class="font-manrope font-extrabold text-blue-800 dark:text-blue-300 tracking-tight text-lg">CheckVoice</h1>
+</div>
+<div class="flex items-center gap-3">
+<button class="hover:bg-slate-200/50 transition-colors active:duration-100 scale-95 p-2 rounded-full">
+<span class="material-symbols-outlined text-blue-700 dark:text-blue-400">add</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="portrait of a professional man with a friendly smile, clean studio lighting, soft blue background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-TdsTmibCurynrarv9stqypR-LlJhUjlmCDjHDf2AEKq1UGRCT6C59UnJeTEL_pX5ZO-S8fRyUDsBHHkv_IErXdUDXzTTkQvbu0qNh38L-n-U6ugRgUzETY9e5kiP0W8MkoYoUpT0Phl9uLyB-rKE3S6KgNZr4-MobmB2KlRsUZtCqAm9Y7EwFLJjnyY7dlyg33vJrfBtYirJOy5QnNj9MZY0rs2DzuoEWWfljtEH-reb-khDzyzj-1tUZqH7xSma6JHTHgu_igU"/>
+</div>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-5xl mx-auto">
+<section class="mb-10">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<span class="font-inter text-xs tracking-wider uppercase text-slate-500 mb-1 block">Active Project</span>
+<h2 class="font-headline font-bold text-4xl text-on-surface tracking-tight leading-none">Home Renovation</h2>
+</div>
+<button class="bg-primary text-on-primary rounded-xl px-6 h-[3.5rem] flex items-center gap-2 font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined">add_task</span>
+                    Add Checklist
+                </button>
+</div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="bg-surface-container-low rounded-[2rem] p-6 group hover:bg-surface-container-high transition-all duration-300">
+<div class="flex justify-between items-start mb-8">
+<div class="w-12 h-12 rounded-2xl bg-primary-fixed-dim flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">countertops</span>
+</div>
+<div class="relative w-14 h-14 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-highest" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-width="4"></circle>
+<circle class="text-primary" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-dasharray="150.79" stroke-dashoffset="37.7" stroke-width="4"></circle>
+</svg>
+<span class="absolute text-[10px] font-bold font-label">75%</span>
+</div>
+</div>
+<h3 class="font-headline font-bold text-xl mb-2 text-on-surface">Kitchen Prep</h3>
+<p class="font-body text-on-surface-variant text-sm mb-6 leading-relaxed">Organizing cabinets and clearing workspaces for the new installation.</p>
+<div class="flex items-center gap-2">
+<span class="font-label text-[10px] tracking-wider uppercase text-slate-400">8 Items • 2 Remaining</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-[2rem] p-6 group hover:bg-surface-container-high transition-all duration-300">
+<div class="flex justify-between items-start mb-8">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">format_paint</span>
+</div>
+<div class="relative w-14 h-14 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-highest" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-width="4"></circle>
+<circle class="text-secondary" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-dasharray="150.79" stroke-dashoffset="105.5" stroke-width="4"></circle>
+</svg>
+<span class="absolute text-[10px] font-bold font-label">30%</span>
+</div>
+</div>
+<h3 class="font-headline font-bold text-xl mb-2 text-on-surface">Living Room Paint</h3>
+<p class="font-body text-on-surface-variant text-sm mb-6 leading-relaxed">Priming walls and selecting final color swatches for the main lounge area.</p>
+<div class="flex items-center gap-2">
+<span class="font-label text-[10px] tracking-wider uppercase text-slate-400">12 Items • 9 Remaining</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-[2rem] p-6 group hover:bg-surface-container-high transition-all duration-300">
+<div class="flex justify-between items-start mb-8">
+<div class="w-12 h-12 rounded-2xl bg-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">electrical_services</span>
+</div>
+<div class="relative w-14 h-14 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-highest" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-width="4"></circle>
+<circle class="text-tertiary" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-dasharray="150.79" stroke-dashoffset="143.2" stroke-width="4"></circle>
+</svg>
+<span class="absolute text-[10px] font-bold font-label">5%</span>
+</div>
+</div>
+<h3 class="font-headline font-bold text-xl mb-2 text-on-surface">Electrical Rewiring</h3>
+<p class="font-body text-on-surface-variant text-sm mb-6 leading-relaxed">Updating circuit breakers and adding new smart outlets in the study.</p>
+<div class="flex items-center gap-2">
+<span class="font-label text-[10px] tracking-wider uppercase text-slate-400">24 Items • 23 Remaining</span>
+</div>
+</div>
+<div class="lg:col-span-2 bg-surface-container-low rounded-[2rem] p-8 flex flex-col md:flex-row items-center gap-8 border border-outline-variant/10">
+<div class="flex-1">
+<h3 class="font-headline font-bold text-2xl mb-4">Project Overview</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant font-body">Overall Progress</span>
+<span class="font-bold text-primary">38%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-3 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 38%"></div>
+</div>
+<div class="grid grid-cols-3 gap-4 mt-6">
+<div class="text-center">
+<div class="text-2xl font-black text-on-surface">3</div>
+<div class="text-[10px] uppercase tracking-widest text-slate-500">Active</div>
+</div>
+<div class="text-center">
+<div class="text-2xl font-black text-on-surface">1</div>
+<div class="text-[10px] uppercase tracking-widest text-slate-500">Done</div>
+</div>
+<div class="text-center">
+<div class="text-2xl font-black text-on-surface">44</div>
+<div class="text-[10px] uppercase tracking-widest text-slate-500">Tasks</div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full md:w-64 h-48 rounded-2xl overflow-hidden shadow-xl shadow-on-surface/5">
+<img alt="Project Context" class="w-full h-full object-cover" data-alt="Modern minimalist home renovation scene with fresh white walls and natural wood flooring, bright afternoon sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_o0VP1Z-sBbwwMqSEGXuOI7-ky1Xuoiwth0HFT2q1Gh647oe5k50qK0bHV7qJNiyzGbuoE2tRGeO_LG42yFe8BYhAfrKNftyANe9Sz6DkwqGR9OotEUlkIuOaG91WYeyJ-qSDoo730IWfaxL9jQhlaOY7okMTkVPnqBc5IJpNHPonb13qml9ChhNZsSCjoEkA4qiAxaSOgBLp9d32YormoUazvccWtB3JSXR2xUoF3u_LauQIQmCncxU0fsjZ6MXp5VaSwjqnOZA"/>
+</div>
+</div>
+<div class="bg-surface-variant/40 rounded-[2rem] p-6 border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container transition-colors group">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-slate-400 text-3xl">add_circle</span>
+</div>
+<h4 class="font-headline font-bold text-lg text-slate-600">New Checklist</h4>
+<p class="text-xs text-slate-400 px-4 mt-2">Start a new voice-guided list for this project.</p>
+</div>
+</div>
+</main>
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.06)] rounded-t-3xl">
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+<span class="material-symbols-outlined mb-1">dashboard</span>
+<span class="font-inter text-[10px] font-medium tracking-tight">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-2xl px-5 py-2">
+<span class="material-symbols-outlined mb-1">assignment</span>
+<span class="font-inter text-[10px] font-medium tracking-tight">Projects</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+<div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center -mt-8 shadow-lg shadow-primary/30 pulse-animation-on-mic-icon transition-transform duration-300 active:scale-90">
+<span class="material-symbols-outlined text-white text-2xl" data-weight="fill" style="font-variation-settings: 'FILL' 1;">mic</span>
+</div>
+<span class="font-inter text-[10px] font-medium tracking-tight mt-1">Assistant</span>
+</div>
+</nav>
+<div class="fixed bottom-24 right-6 md:hidden">
+<button class="w-14 h-14 bg-tertiary-container text-on-tertiary-container rounded-full flex items-center justify-center shadow-2xl active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">edit</span>
+</button>
+</div>
+</body></html>

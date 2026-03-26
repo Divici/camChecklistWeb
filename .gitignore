@@ -1,0 +1,17 @@
+
+.forge/
+
+# Presearch artifacts
+STUDY_GUIDE.md
+PRESEARCH.md
+WORKFLOW_STATE.md
+decision-log.md
+
+# Environment
+.env
+.env.local
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db

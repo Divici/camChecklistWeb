@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CheckVoice AI Assistant</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-container": "#9d4400",
+                        "on-surface": "#181c1e",
+                        "on-background": "#181c1e",
+                        "on-secondary-container": "#217128",
+                        "surface-bright": "#f7fafc",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#ffcfb6",
+                        "inverse-surface": "#2d3133",
+                        "primary-container": "#0056d2",
+                        "surface-dim": "#d7dadc",
+                        "surface": "#f7fafc",
+                        "surface-container-highest": "#e0e3e5",
+                        "tertiary-fixed-dim": "#ffb68f",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f1f4f6",
+                        "surface-container": "#ebeef0",
+                        "on-primary-container": "#ccd8ff",
+                        "on-secondary-fixed-variant": "#005312",
+                        "secondary-fixed-dim": "#88d982",
+                        "on-primary-fixed-variant": "#0040a1",
+                        "on-surface-variant": "#424654",
+                        "tertiary-fixed": "#ffdbca",
+                        "secondary": "#1b6d24",
+                        "primary": "#0040a1",
+                        "on-secondary-fixed": "#002204",
+                        "surface-container-high": "#e5e9eb",
+                        "on-tertiary-fixed": "#331200",
+                        "surface-tint": "#0056d2",
+                        "on-primary-fixed": "#001847",
+                        "primary-fixed": "#dae2ff",
+                        "primary-fixed-dim": "#b2c5ff",
+                        "secondary-container": "#a0f399",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e0e3e5",
+                        "on-tertiary-fixed-variant": "#773200",
+                        "inverse-on-surface": "#eef1f3",
+                        "background": "#f7fafc",
+                        "inverse-primary": "#b2c5ff",
+                        "on-secondary": "#ffffff",
+                        "outline": "#737785",
+                        "outline-variant": "#c3c6d6",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#a3f69c",
+                        "tertiary": "#773200"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .sonic-pulse-bg {
+            background: radial-gradient(circle at 50% 50%, #ffdbca 0%, rgba(247, 250, 252, 0) 70%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest font-body text-on-surface antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-slate-50 dark:bg-slate-950 flex justify-between items-center w-full px-6 h-16 fixed top-0 z-50">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold overflow-hidden">
+<img alt="User Profile" data-alt="close up professional portrait of a smiling woman with glasses in a minimalist bright office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA14dAPuouZW69VrRCCIaXYlG8QHL08psQNzqFeJnRXEw-w0IewQNxeYFbb6K-7KMoGyvlRpd3fnCjP1z59NYlCFqeqrWYIWk59IRhxXH8UkTz_w3uk6sD8-YPQk5XL_6hY0Njfdl0r0FxQh4D6o7Jyi1v63zb0sKXFQxpOdVNiugOPP3O6bYgpOrj5GoekghvaGXf_p-ZKz3i3ykqE37VqJl6lpZ5pzkHJLRxXolfUgb07_4mOhxLgw4igDMi9vUjWacUZr-dWkzs"/>
+</div>
+<h1 class="font-manrope font-extrabold text-blue-800 dark:text-blue-300 tracking-tight text-lg">CheckVoice</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200/50 transition-colors active:scale-95 active:duration-100">
+<span class="material-symbols-outlined text-blue-700 dark:text-blue-400" data-icon="add">add</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 mt-16 mb-28 px-4 py-8 max-w-2xl mx-auto w-full flex flex-col gap-8">
+<!-- Welcome Section -->
+<section class="mb-4">
+<h2 class="font-headline font-extrabold text-on-surface tracking-tight text-3xl leading-tight">
+                How can I help you <br/><span class="text-primary">stay on track?</span>
+</h2>
+</section>
+<!-- Conversational Area -->
+<div class="flex flex-col gap-6">
+<!-- User Query -->
+<div class="flex flex-col items-end pl-12">
+<div class="bg-surface-container-high rounded-2xl rounded-tr-none px-5 py-4 shadow-sm">
+<p class="text-on-surface-variant font-body leading-relaxed">What's next on my list?</p>
+</div>
+<span class="font-label text-[10px] text-outline mt-2 tracking-widest uppercase">Just now</span>
+</div>
+<!-- AI Response Card (Editorial Layout) -->
+<div class="flex flex-col items-start pr-8">
+<div class="bg-white rounded-3xl rounded-tl-none p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-outline-variant/10 relative overflow-hidden">
+<!-- Subtle Glass Accent -->
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-8 -mt-8 blur-2xl"></div>
+<div class="flex items-start gap-4 mb-4">
+<div class="bg-primary-container p-2 rounded-xl">
+<span class="material-symbols-outlined text-white text-xl" data-icon="mic_spark">spark</span>
+</div>
+<div>
+<p class="font-body text-lg font-medium text-on-surface leading-tight">Your next uncompleted task is:</p>
+</div>
+</div>
+<!-- Task Highlight (Bento-style element) -->
+<div class="bg-surface-container-low p-5 rounded-2xl flex flex-col gap-3 group transition-all">
+<div class="flex justify-between items-center">
+<span class="font-label text-[10px] font-bold text-secondary tracking-widest uppercase">Project: Kitchen Prep</span>
+<span class="material-symbols-outlined text-outline-variant text-sm" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-6 h-6 rounded border-2 border-primary/20 flex items-center justify-center"></div>
+<h3 class="font-headline font-bold text-xl text-on-surface">Buy Paint</h3>
+</div>
+<div class="flex gap-2 mt-1">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-[10px] font-bold">HIGH PRIORITY</span>
+<span class="bg-primary-fixed text-on-primary-fixed px-3 py-1 rounded-full text-[10px] font-bold">VOICE-ADDED</span>
+</div>
+</div>
+<p class="mt-5 font-body text-on-surface-variant leading-relaxed">
+                        Would you like me to find the nearest hardware store or set a reminder for when you leave the house?
+                    </p>
+</div>
+<span class="font-label text-[10px] text-outline mt-2 ml-1 tracking-widest uppercase">Assistant</span>
+</div>
+<!-- Contextual Quick Actions -->
+<div class="flex flex-wrap gap-2 mt-2">
+<button class="bg-surface-container-lowest border border-outline-variant/30 px-4 py-2 rounded-full text-sm font-medium text-primary hover:bg-primary/5 transition-colors">
+                    Find stores nearby
+                </button>
+<button class="bg-surface-container-lowest border border-outline-variant/30 px-4 py-2 rounded-full text-sm font-medium text-primary hover:bg-primary/5 transition-colors">
+                    Set reminder
+                </button>
+<button class="bg-surface-container-lowest border border-outline-variant/30 px-4 py-2 rounded-full text-sm font-medium text-primary hover:bg-primary/5 transition-colors">
+                    Done
+                </button>
+</div>
+</div>
+<!-- Recording HUD Placeholder (Empty State when not active) -->
+<div class="mt-auto pt-12 text-center">
+<p class="font-label text-[10px] text-outline tracking-[0.2em] uppercase mb-4">Tap to dictate</p>
+</div>
+</main>
+<!-- Recording Signature Interaction Area -->
+<div class="fixed bottom-24 left-1/2 -translate-x-1/2 z-40">
+<button class="w-20 h-20 rounded-full bg-primary shadow-2xl flex items-center justify-center text-on-primary transition-transform active:scale-90 relative">
+<div class="absolute inset-0 rounded-full bg-primary animate-ping opacity-20 scale-125"></div>
+<span class="material-symbols-outlined text-4xl" data-icon="mic" style="font-variation-settings: 'FILL' 1;">mic</span>
+</button>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.06)] rounded-t-3xl">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-blue-600 dark:hover:text-blue-400" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-inter text-[10px] font-medium tracking-tight mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-blue-600 dark:hover:text-blue-400" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-inter text-[10px] font-medium tracking-tight mt-1">Projects</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-2xl px-5 py-2" href="#">
+<span class="material-symbols-outlined" data-icon="mic" style="font-variation-settings: 'FILL' 1;">mic</span>
+<span class="font-inter text-[10px] font-medium tracking-tight mt-1">Assistant</span>
+</a>
+</nav>
+</body></html>
