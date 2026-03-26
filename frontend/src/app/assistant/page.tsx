@@ -26,6 +26,10 @@ interface ChatMessage {
 export default function AssistantPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null
+  );
+  const [showProjectSelector, setShowProjectSelector] = useState(false);
   const [selectedChecklistId, setSelectedChecklistId] = useState<string | null>(
     null
   );
@@ -34,15 +38,23 @@ export default function AssistantPage() {
 
   // Fetch projects to find available checklists
   const { data: projects } = useProjects();
-  const firstProjectId = projects?.[0]?.id;
-  const { data: checklists } = useChecklists(firstProjectId ?? "");
+  const { data: checklists } = useChecklists(selectedProjectId ?? "");
 
-  // Auto-select first checklist
+  // Auto-select first project
   useEffect(() => {
-    if (checklists && checklists.length > 0 && !selectedChecklistId) {
-      setSelectedChecklistId(String(checklists[0].id));
+    if (projects && projects.length > 0 && !selectedProjectId) {
+      setSelectedProjectId(String(projects[0].id));
     }
-  }, [checklists, selectedChecklistId]);
+  }, [projects, selectedProjectId]);
+
+  // Auto-select first checklist when project changes
+  useEffect(() => {
+    if (checklists && checklists.length > 0) {
+      setSelectedChecklistId(String(checklists[0].id));
+    } else {
+      setSelectedChecklistId(null);
+    }
+  }, [checklists]);
 
   const askQuestion = useAskQuestion(selectedChecklistId ?? "");
 
@@ -103,6 +115,9 @@ export default function AssistantPage() {
     }
   }, [isListening, startListening, stopListening]);
 
+  const selectedProject = projects?.find(
+    (p) => String(p.id) === selectedProjectId
+  );
   const selectedChecklist = checklists?.find(
     (c) => String(c.id) === selectedChecklistId
   );
@@ -117,11 +132,52 @@ export default function AssistantPage() {
         </h2>
       </section>
 
+      {/* Project Selector */}
+      {projects && projects.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={() => {
+              setShowProjectSelector(!showProjectSelector);
+              setShowSelector(false);
+            }}
+            className="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors"
+          >
+            <span>
+              {selectedProject ? selectedProject.name : "Select project"}
+            </span>
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          {showProjectSelector && (
+            <div className="absolute top-full mt-2 left-0 bg-surface-container-highest rounded-2xl shadow-xl z-50 overflow-hidden min-w-[200px]">
+              {projects.map((proj) => (
+                <button
+                  key={proj.id}
+                  onClick={() => {
+                    setSelectedProjectId(String(proj.id));
+                    setShowProjectSelector(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 text-sm font-body hover:bg-surface-container-high transition-colors ${
+                    String(proj.id) === selectedProjectId
+                      ? "text-primary font-semibold"
+                      : "text-on-surface"
+                  }`}
+                >
+                  {proj.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Checklist Selector */}
       {checklists && checklists.length > 0 && (
         <div className="relative">
           <button
-            onClick={() => setShowSelector(!showSelector)}
+            onClick={() => {
+              setShowSelector(!showSelector);
+              setShowProjectSelector(false);
+            }}
             className="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors"
           >
             <span>
@@ -270,7 +326,7 @@ export default function AssistantPage() {
       {/* Input Area */}
       <div className="fixed bottom-24 left-0 w-full px-4 z-40">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-surface-container/80 backdrop-blur-xl rounded-full flex items-center gap-2 px-4 py-2 shadow-2xl border border-outline-variant/20">
+          <div className="bg-surface-container/80 backdrop-blur-xl rounded-full flex items-center gap-2 px-4 py-2 shadow-2xl">
             <input
               type="text"
               value={inputText}
