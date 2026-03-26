@@ -13,8 +13,10 @@ import {
   Package,
   Wrench,
   BookOpen,
+  Trash2,
+  X,
 } from "lucide-react";
-import { useProject, useChecklists, useCreateChecklist } from "@/lib/hooks";
+import { useProject, useChecklists, useCreateChecklist, useDeleteChecklist } from "@/lib/hooks";
 import { ProgressRing } from "@/components/progress-ring";
 import { ProgressBar } from "@/components/progress-bar";
 
@@ -67,9 +69,11 @@ export default function ProjectDetailPage() {
   const { data: project, isLoading: projectLoading } = useProject(projectId);
   const { data: checklists, isLoading: checklistsLoading } = useChecklists(projectId);
   const createChecklist = useCreateChecklist(projectId);
+  const deleteChecklist = useDeleteChecklist(projectId);
   const [showDialog, setShowDialog] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [deleteChecklistId, setDeleteChecklistId] = useState<number | null>(null);
 
   const isLoading = projectLoading || checklistsLoading;
 
@@ -131,8 +135,21 @@ export default function ProjectDetailPage() {
           <Link
             key={checklist.id}
             href={`/projects/${projectId}/checklists/${checklist.id}`}
-            className="bg-surface-container-low rounded-[2rem] p-6 group hover:bg-surface-container-high transition-all duration-300 block"
+            className="bg-surface-container-low rounded-[2rem] p-6 group hover:bg-surface-container-high transition-all duration-300 block relative"
           >
+            {/* Delete button */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDeleteChecklistId(checklist.id);
+              }}
+              className="absolute top-4 right-4 p-2 rounded-lg hover:bg-error-container transition-colors text-on-surface-variant hover:text-error z-10 opacity-0 group-hover:opacity-100"
+              aria-label="Delete checklist"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+
             <div className="flex justify-between items-start mb-8">
               <div
                 className={`w-12 h-12 rounded-2xl ${getIconBg(index)} flex items-center justify-center`}
@@ -159,6 +176,47 @@ export default function ProjectDetailPage() {
                 {checklist.remaining_count} Remaining
               </span>
             </div>
+
+            {/* Delete Confirmation Overlay */}
+            {deleteChecklistId === checklist.id && (
+              <div
+                className="absolute inset-0 bg-surface-container-low/95 rounded-[2rem] flex flex-col items-center justify-center z-20 backdrop-blur-sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <p className="font-headline font-bold text-lg text-on-surface mb-2">
+                  Delete this checklist?
+                </p>
+                <p className="text-on-surface-variant text-sm mb-6">
+                  This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDeleteChecklistId(null);
+                    }}
+                    className="px-5 py-2.5 rounded-xl font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      deleteChecklist.mutate(checklist.id);
+                      setDeleteChecklistId(null);
+                    }}
+                    className="bg-error text-on-error px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
           </Link>
         ))}
 

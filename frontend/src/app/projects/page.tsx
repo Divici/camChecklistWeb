@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ListChecks, PlusCircle, Mic } from "lucide-react";
-import { useProjects, useCreateProject } from "@/lib/hooks";
+import { ListChecks, PlusCircle, Mic, Trash2, Pencil, X, Check } from "lucide-react";
+import { useProjects, useCreateProject, useDeleteProject, useUpdateProject } from "@/lib/hooks";
 import { ProgressBar } from "@/components/progress-bar";
 import { StatusBadge } from "@/components/status-badge";
 
@@ -26,11 +26,214 @@ function isHighPriority(status: string) {
   return s === "high_priority" || s === "high priority";
 }
 
+function ProjectCard({
+  project,
+  editingId,
+  editName,
+  setEditingId,
+  setEditName,
+  deleteConfirmId,
+  setDeleteConfirmId,
+  deleteProject,
+}: {
+  project: { id: number; name: string; status: string; checklists_count: number; progress_percentage: number; completed_items_count: number; items_count: number };
+  editingId: number | null;
+  editName: string;
+  setEditingId: (id: number | null) => void;
+  setEditName: (name: string) => void;
+  deleteConfirmId: number | null;
+  setDeleteConfirmId: (id: number | null) => void;
+  deleteProject: { mutate: (id: number) => void; isPending: boolean };
+}) {
+  const updateProject = useUpdateProject(project.id);
+  const isEditing = editingId === project.id;
+  const isDeleting = deleteConfirmId === project.id;
+
+  function handleSaveEdit() {
+    if (!editName.trim()) return;
+    updateProject.mutate(
+      { name: editName.trim() },
+      { onSuccess: () => setEditingId(null) }
+    );
+  }
+
+  return (
+    <Link
+      key={project.id}
+      href={`/projects/${project.id}`}
+      className={`bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high group block relative ${
+        isHighPriority(project.status) ? "border-l-4 border-tertiary" : ""
+      }`}
+    >
+      {/* Action buttons */}
+      <div className="absolute top-4 right-4 flex items-center gap-1 z-10">
+        {!isEditing && !isDeleting && (
+          <>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setEditingId(project.id);
+                setEditName(project.name);
+              }}
+              className="p-2 rounded-lg hover:bg-surface-container-highest transition-colors text-on-surface-variant hover:text-primary"
+              aria-label="Edit project"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDeleteConfirmId(project.id);
+              }}
+              className="p-2 rounded-lg hover:bg-error-container transition-colors text-on-surface-variant hover:text-error"
+              aria-label="Delete project"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex-1 mr-16">
+          {isEditing ? (
+            <div
+              className="flex items-center gap-2"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <input
+                autoFocus
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveEdit();
+                  if (e.key === "Escape") setEditingId(null);
+                }}
+                className="font-headline font-bold text-xl text-on-surface bg-surface-container-low rounded-lg px-3 py-1 border border-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/30 w-full"
+              />
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSaveEdit();
+                }}
+                disabled={!editName.trim() || updateProject.isPending}
+                className="p-1.5 rounded-lg bg-primary text-on-primary hover:opacity-90 transition-all disabled:opacity-50"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setEditingId(null);
+                }}
+                className="p-1.5 rounded-lg hover:bg-surface-container-highest transition-colors text-on-surface-variant"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <h3 className="font-headline font-bold text-xl text-on-surface group-hover:text-primary transition-colors">
+                {project.name}
+              </h3>
+              <div className="flex items-center gap-2 mt-1">
+                <ListChecks className="w-4 h-4 text-outline" />
+                <span className="font-label text-xs tracking-tight text-on-surface-variant uppercase">
+                  {project.checklists_count} Checklist
+                  {project.checklists_count === 1 ? "" : "s"}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+        {!isEditing && (
+          <StatusBadge
+            status={project.status}
+            progress={project.progress_percentage}
+          />
+        )}
+      </div>
+      <div className="space-y-3">
+        <div className="flex justify-between items-end">
+          <span className="font-label text-xs font-semibold text-outline">
+            {project.completed_items_count}/{project.items_count} tasks
+            completed
+          </span>
+          <span
+            className={`font-headline font-bold italic ${progressTextColor(project.progress_percentage, project.status)}`}
+          >
+            {Math.round(project.progress_percentage)}%
+          </span>
+        </div>
+        <ProgressBar
+          value={project.progress_percentage}
+          colorClass={progressColor(
+            project.progress_percentage,
+            project.status
+          )}
+        />
+      </div>
+
+      {/* Delete Confirmation Overlay */}
+      {isDeleting && (
+        <div
+          className="absolute inset-0 bg-surface-container-low/95 rounded-xl flex flex-col items-center justify-center z-20 backdrop-blur-sm"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <p className="font-headline font-bold text-lg text-on-surface mb-2">
+            Delete this project?
+          </p>
+          <p className="text-on-surface-variant text-sm mb-6">
+            This action cannot be undone.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDeleteConfirmId(null);
+              }}
+              className="px-5 py-2.5 rounded-xl font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteProject.mutate(project.id);
+                setDeleteConfirmId(null);
+              }}
+              className="bg-error text-on-error px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+    </Link>
+  );
+}
+
 export default function ProjectsPage() {
   const { data: projects, isLoading, error } = useProjects();
   const createProject = useCreateProject();
+  const deleteProject = useDeleteProject();
   const [showDialog, setShowDialog] = useState(false);
   const [newName, setNewName] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   function handleCreate() {
     if (!newName.trim()) return;
@@ -67,54 +270,17 @@ export default function ProjectsPage() {
       {/* Project Cards */}
       <div className="grid grid-cols-1 gap-6">
         {projects?.map((project) => (
-          <Link
+          <ProjectCard
             key={project.id}
-            href={`/projects/${project.id}`}
-            className={`bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high group block ${
-              isHighPriority(project.status)
-                ? "border-l-4 border-tertiary"
-                : ""
-            }`}
-          >
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h3 className="font-headline font-bold text-xl text-on-surface group-hover:text-primary transition-colors">
-                  {project.name}
-                </h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <ListChecks className="w-4 h-4 text-outline" />
-                  <span className="font-label text-xs tracking-tight text-on-surface-variant uppercase">
-                    {project.checklists_count} Checklist
-                    {project.checklists_count === 1 ? "" : "s"}
-                  </span>
-                </div>
-              </div>
-              <StatusBadge
-                status={project.status}
-                progress={project.progress_percentage}
-              />
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-end">
-                <span className="font-label text-xs font-semibold text-outline">
-                  {project.completed_items_count}/{project.items_count} tasks
-                  completed
-                </span>
-                <span
-                  className={`font-headline font-bold italic ${progressTextColor(project.progress_percentage, project.status)}`}
-                >
-                  {Math.round(project.progress_percentage)}%
-                </span>
-              </div>
-              <ProgressBar
-                value={project.progress_percentage}
-                colorClass={progressColor(
-                  project.progress_percentage,
-                  project.status
-                )}
-              />
-            </div>
-          </Link>
+            project={project}
+            editingId={editingId}
+            editName={editName}
+            setEditingId={setEditingId}
+            setEditName={setEditName}
+            deleteConfirmId={deleteConfirmId}
+            setDeleteConfirmId={setDeleteConfirmId}
+            deleteProject={deleteProject}
+          />
         ))}
 
         {/* New Project Card */}
