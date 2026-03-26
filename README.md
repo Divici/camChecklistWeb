@@ -126,16 +126,18 @@ npm run build  # Type-check + build verification
 
 ## Deployment
 
-### Frontend (Vercel)
-1. Connect the `frontend/` directory to Vercel
-2. Set `NEXT_PUBLIC_API_URL` to your Railway API URL
-3. Deploy
+### Frontend (Railway)
+1. Create a new Railway service from the repo
+2. Set the root directory to `frontend/`
+3. Set `NEXT_PUBLIC_API_URL` to your API service's Railway URL
+4. Railway will auto-detect the Dockerfile and deploy
 
 ### Backend (Railway)
-1. Connect the `api/` directory to Railway
-2. Add PostgreSQL plugin
-3. Set environment variables: `ANTHROPIC_API_KEY`, `FRONTEND_URL`, `LANGFUSE_*`
-4. Deploy
+1. Create a new Railway service from the repo
+2. Set the root directory to `api/`
+3. Add PostgreSQL plugin
+4. Set environment variables: `ANTHROPIC_API_KEY`, `FRONTEND_URL`, `LANGFUSE_*`
+5. Railway will auto-detect the Dockerfile and deploy
 
 ## License
 
