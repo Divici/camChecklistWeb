@@ -62,11 +62,11 @@ function getIcon(iconName: string | null, index: number) {
 }
 
 export default function ProjectDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const router = useRouter();
-  const { data: project, isLoading: projectLoading } = useProject(id);
-  const { data: checklists, isLoading: checklistsLoading } = useChecklists(id);
-  const createChecklist = useCreateChecklist(id);
+  const { data: project, isLoading: projectLoading } = useProject(projectId);
+  const { data: checklists, isLoading: checklistsLoading } = useChecklists(projectId);
+  const createChecklist = useCreateChecklist(projectId);
   const [showDialog, setShowDialog] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -130,7 +130,7 @@ export default function ProjectDetailPage() {
         {checklists?.map((checklist, index) => (
           <Link
             key={checklist.id}
-            href={`/projects/${id}/checklists/${checklist.id}`}
+            href={`/projects/${projectId}/checklists/${checklist.id}`}
             className="bg-surface-container-low rounded-[2rem] p-6 group hover:bg-surface-container-high transition-all duration-300 block"
           >
             <div className="flex justify-between items-start mb-8">
