@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Check,
+  Check as CheckIcon,
   GripVertical,
   Pencil,
   Camera,
@@ -14,12 +15,17 @@ import {
   Upload,
   Loader2,
   Send,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import {
   useProject,
   useChecklist,
   useItems,
   useToggleItem,
+  useCreateItem,
+  useUpdateItem,
+  useDeleteItem,
   useVoiceCheck,
   usePhotoCheck,
 } from "@/lib/hooks";
@@ -36,6 +42,9 @@ export default function ChecklistPage() {
   const { data: checklist } = useChecklist(projectId, id);
   const { data: items } = useItems(id);
   const toggleItem = useToggleItem(id);
+  const createItem = useCreateItem(id);
+  const updateItem = useUpdateItem(id);
+  const deleteItem = useDeleteItem(id);
   const voiceCheck = useVoiceCheck(id);
   const photoCheck = usePhotoCheck(id);
 
@@ -45,6 +54,10 @@ export default function ChecklistPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showAddItem, setShowAddItem] = useState(false);
+  const [newItemText, setNewItemText] = useState("");
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [editText, setEditText] = useState("");
 
   // Voice recognition
   const {
@@ -161,6 +174,22 @@ export default function ChecklistPage() {
     toggleItem.mutate({ itemId: item.id, completed: !item.completed });
   }
 
+  function handleCreateItem() {
+    if (!newItemText.trim()) return;
+    createItem.mutate(
+      { text: newItemText.trim() },
+      { onSuccess: () => { setNewItemText(""); setShowAddItem(false); } }
+    );
+  }
+
+  function handleSaveEdit(itemId: number) {
+    if (!editText.trim()) return;
+    updateItem.mutate(
+      { itemId, data: { text: editText.trim() } },
+      { onSuccess: () => { setEditingItemId(null); setEditText(""); } }
+    );
+  }
+
   const isAiProcessing = voiceCheck.isPending || photoCheck.isPending;
 
   // Sort: completed first, then by position
@@ -242,18 +271,61 @@ export default function ChecklistPage() {
                     </button>
                   </div>
                   <div className="flex-grow">
-                    <h3 className="font-headline font-bold text-lg text-on-surface line-through decoration-secondary/40 opacity-60">
-                      {item.text}
-                    </h3>
-                    <p className="text-xs font-label text-secondary font-semibold uppercase tracking-wider">
-                      {item.completed_via === "voice"
-                        ? "Completed via Voice"
-                        : item.completed_via === "photo"
-                          ? "Completed via Photo"
-                          : "Completed"}
-                    </p>
+                    {editingItemId === item.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleSaveEdit(item.id)}
+                          className="flex-1 bg-surface-container px-3 py-2 rounded-xl text-on-surface font-body outline-none ring-1 ring-primary/30 focus:ring-primary"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleSaveEdit(item.id)}
+                          className="p-2 rounded-full hover:bg-surface-container-high text-primary"
+                        >
+                          <CheckIcon className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => { setEditingItemId(null); setEditText(""); }}
+                          className="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => deleteItem.mutate(item.id)}
+                          className="p-2 rounded-full hover:bg-error-container text-error"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <h3 className="font-headline font-bold text-lg text-on-surface line-through decoration-secondary/40 opacity-60">
+                          {item.text}
+                        </h3>
+                        <p className="text-xs font-label text-secondary font-semibold uppercase tracking-wider">
+                          {item.completed_via === "voice"
+                            ? "Completed via Voice"
+                            : item.completed_via === "photo"
+                              ? "Completed via Photo"
+                              : "Completed"}
+                        </p>
+                      </>
+                    )}
                   </div>
-                  <GripVertical className="w-5 h-5 text-on-surface-variant opacity-40" />
+                  {editingItemId !== item.id && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setEditingItemId(item.id); setEditText(item.text); }}
+                        className="p-2 rounded-full hover:bg-surface-bright text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <GripVertical className="w-5 h-5 text-on-surface-variant opacity-40" />
+                    </div>
+                  )}
                 </div>
               );
             }
@@ -273,18 +345,56 @@ export default function ChecklistPage() {
                     </button>
                   </div>
                   <div className="flex-grow">
-                    <h3 className="font-headline font-bold text-lg text-on-surface">
-                      {item.text}
-                    </h3>
-                    <p className="text-xs font-label text-on-surface-variant uppercase tracking-wider">
-                      Priority: {item.priority || "Normal"}
-                    </p>
+                    {editingItemId === item.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleSaveEdit(item.id)}
+                          className="flex-1 bg-surface-container px-3 py-2 rounded-xl text-on-surface font-body outline-none ring-1 ring-primary/30 focus:ring-primary"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleSaveEdit(item.id)}
+                          className="p-2 rounded-full hover:bg-surface-container-high text-primary"
+                        >
+                          <CheckIcon className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => { setEditingItemId(null); setEditText(""); }}
+                          className="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => deleteItem.mutate(item.id)}
+                          className="p-2 rounded-full hover:bg-error-container text-error"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <h3 className="font-headline font-bold text-lg text-on-surface">
+                          {item.text}
+                        </h3>
+                        <p className="text-xs font-label text-on-surface-variant uppercase tracking-wider">
+                          Priority: {item.priority || "Normal"}
+                        </p>
+                      </>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <button className="p-2 rounded-full hover:bg-surface-bright text-on-surface-variant">
-                      <Pencil className="w-5 h-5" />
-                    </button>
-                  </div>
+                  {editingItemId !== item.id && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setEditingItemId(item.id); setEditText(item.text); }}
+                        className="p-2 rounded-full hover:bg-surface-bright text-on-surface-variant"
+                      >
+                        <Pencil className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             }
@@ -302,18 +412,103 @@ export default function ChecklistPage() {
                   />
                 </div>
                 <div className="flex-grow">
-                  <h3 className="font-headline font-bold text-lg text-on-surface">
-                    {item.text}
-                  </h3>
-                  <p className="text-xs font-label text-on-surface-variant uppercase tracking-wider">
-                    Priority: {item.priority || "Normal"}
-                  </p>
+                  {editingItemId === item.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSaveEdit(item.id)}
+                        className="flex-1 bg-surface-container px-3 py-2 rounded-xl text-on-surface font-body outline-none ring-1 ring-primary/30 focus:ring-primary"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => handleSaveEdit(item.id)}
+                        className="p-2 rounded-full hover:bg-surface-container-high text-primary"
+                      >
+                        <CheckIcon className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => { setEditingItemId(null); setEditText(""); }}
+                        className="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => deleteItem.mutate(item.id)}
+                        className="p-2 rounded-full hover:bg-error-container text-error"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="font-headline font-bold text-lg text-on-surface">
+                        {item.text}
+                      </h3>
+                      <p className="text-xs font-label text-on-surface-variant uppercase tracking-wider">
+                        Priority: {item.priority || "Normal"}
+                      </p>
+                    </>
+                  )}
                 </div>
-                <GripVertical className="w-5 h-5 text-on-surface-variant opacity-20" />
+                {editingItemId !== item.id && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setEditingItemId(item.id); setEditText(item.text); }}
+                      className="p-2 rounded-full hover:bg-surface-bright text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => deleteItem.mutate(item.id)}
+                      className="p-2 rounded-full hover:bg-error-container text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <GripVertical className="w-5 h-5 text-on-surface-variant opacity-20" />
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
+
+        {/* Add Item Button & Form */}
+        {showAddItem ? (
+          <div className="bg-surface-container-low rounded-2xl p-5 flex items-center gap-3">
+            <input
+              type="text"
+              value={newItemText}
+              onChange={(e) => setNewItemText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleCreateItem()}
+              placeholder="New item text..."
+              className="flex-1 bg-surface-container px-4 py-2.5 rounded-xl text-on-surface font-body outline-none ring-1 ring-primary/30 focus:ring-primary"
+              autoFocus
+            />
+            <button
+              onClick={handleCreateItem}
+              disabled={!newItemText.trim() || createItem.isPending}
+              className="px-4 py-2.5 rounded-xl bg-primary text-on-primary font-headline font-semibold text-sm disabled:opacity-50"
+            >
+              Create
+            </button>
+            <button
+              onClick={() => { setShowAddItem(false); setNewItemText(""); }}
+              className="px-4 py-2.5 rounded-xl bg-surface-container-high text-on-surface-variant font-headline font-semibold text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowAddItem(true)}
+            className="w-full flex items-center justify-center gap-2 p-4 bg-surface-container-low rounded-2xl hover:bg-surface-container transition-colors text-on-surface-variant hover:text-on-surface"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="font-headline font-semibold">Add Item</span>
+          </button>
+        )}
       </div>
 
       {/* Text fallback for browsers without Web Speech API */}

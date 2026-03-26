@@ -182,6 +182,20 @@ export function useToggleItem(checklistId: number | string) {
   });
 }
 
+export function useUpdateItem(checklistId: number | string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, data }: { itemId: number | string; data: { text?: string; priority?: string } }) =>
+      apiFetch<Item>(`/checklists/${checklistId}/items/${itemId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ item: data }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+    },
+  });
+}
+
 export function useDeleteItem(checklistId: number | string) {
   const qc = useQueryClient();
   return useMutation({
