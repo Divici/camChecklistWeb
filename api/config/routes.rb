@@ -12,6 +12,9 @@ Rails.application.routes.draw do
       end
       resources :checklists, only: [] do
         resources :items, only: [:index, :create, :update, :destroy]
+        post :voice, to: "ai#voice"
+        post :photo, to: "ai#photo"
+        post :ask, to: "ai#ask"
       end
     end
   end
