@@ -65,39 +65,10 @@ function ProjectCard({
         isHighPriority(project.status) ? "border-l-4 border-tertiary" : ""
       }`}
     >
-      {/* Action buttons */}
-      <div className="absolute top-4 right-4 flex items-center gap-1 z-10">
-        {!isEditing && !isDeleting && (
-          <>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setEditingId(project.id);
-                setEditName(project.name);
-              }}
-              className="p-2 rounded-lg hover:bg-surface-container-highest transition-colors text-on-surface-variant hover:text-primary"
-              aria-label="Edit project"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setDeleteConfirmId(project.id);
-              }}
-              className="p-2 rounded-lg hover:bg-error-container transition-colors text-on-surface-variant hover:text-error"
-              aria-label="Delete project"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </>
-        )}
-      </div>
+      {/* Action buttons — below progress bar */}
 
       <div className="flex justify-between items-start mb-6">
-        <div className="flex-1 mr-16">
+        <div className="flex-1 mr-4">
           {isEditing ? (
             <div
               className="flex items-center gap-2"
@@ -180,6 +151,35 @@ function ProjectCard({
           )}
         />
       </div>
+
+      {/* Action buttons */}
+      {!isEditing && !isDeleting && (
+        <div className="flex justify-end items-center gap-1 mt-3">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setEditingId(project.id);
+              setEditName(project.name);
+            }}
+            className="p-2 rounded-lg hover:bg-surface-container-highest transition-colors text-on-surface-variant hover:text-primary cursor-pointer"
+            aria-label="Edit project"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDeleteConfirmId(project.id);
+            }}
+            className="p-2 rounded-lg hover:bg-error-container transition-colors text-on-surface-variant hover:text-error cursor-pointer"
+            aria-label="Delete project"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Delete Confirmation Overlay */}
       {isDeleting && (

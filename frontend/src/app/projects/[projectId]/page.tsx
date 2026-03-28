@@ -137,19 +137,6 @@ export default function ProjectDetailPage() {
             href={`/projects/${projectId}/checklists/${checklist.id}`}
             className="bg-surface-container-low rounded-[2rem] p-6 group hover:bg-surface-container-high transition-all duration-300 block relative"
           >
-            {/* Delete button */}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setDeleteChecklistId(checklist.id);
-              }}
-              className="absolute top-4 right-4 p-2 rounded-lg hover:bg-error-container transition-colors text-on-surface-variant hover:text-error z-10 opacity-0 group-hover:opacity-100"
-              aria-label="Delete checklist"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-
             <div className="flex justify-between items-start mb-8">
               <div
                 className={`w-12 h-12 rounded-2xl ${getIconBg(index)} flex items-center justify-center`}
@@ -170,11 +157,22 @@ export default function ProjectDetailPage() {
               </p>
             )}
             {!checklist.description && <div className="mb-6" />}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between">
               <span className="font-label text-[10px] tracking-wider uppercase text-outline">
                 {checklist.items_count} Items &bull;{" "}
                 {checklist.remaining_count} Remaining
               </span>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDeleteChecklistId(checklist.id);
+                }}
+                className="p-2 rounded-lg hover:bg-error-container transition-colors text-on-surface-variant hover:text-error opacity-0 group-hover:opacity-100 cursor-pointer"
+                aria-label="Delete checklist"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Delete Confirmation Overlay */}

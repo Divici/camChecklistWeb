@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   Check,
   Check as CheckIcon,
-  GripVertical,
   Pencil,
   Camera,
   Mic,
@@ -323,7 +322,6 @@ export default function ChecklistPage() {
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <GripVertical className="w-5 h-5 text-on-surface-variant opacity-40" />
                     </div>
                   )}
                 </div>
@@ -466,7 +464,6 @@ export default function ChecklistPage() {
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                    <GripVertical className="w-5 h-5 text-on-surface-variant opacity-20" />
                   </div>
                 )}
               </div>

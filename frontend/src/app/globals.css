@@ -171,6 +171,14 @@
   html {
     @apply font-body;
   }
+  button,
+  a,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  select {
+    cursor: pointer;
+  }
 }
 
 /* Sonic Pulse animation for mic FAB */

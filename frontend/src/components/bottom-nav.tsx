@@ -17,7 +17,7 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-surface-container-lowest/80 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.06)] rounded-t-3xl">
+    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-end px-4 pb-6 pt-3 bg-surface-container-lowest/80 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.06)] rounded-t-3xl">
       {tabs.map((tab) => {
         const active = isActive(tab.href);
         const Icon = tab.icon;
@@ -27,9 +27,9 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex flex-col items-center justify-center px-5 py-2 text-outline hover:text-primary"
+              className="flex flex-col items-center justify-end cursor-pointer px-5 py-2 text-outline hover:text-primary"
             >
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-lg -mt-8 pulse-animation-on-mic-icon border-4 border-white">
+              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-lg pulse-animation-on-mic-icon border-4 border-white">
                 <Icon className="w-6 h-6 text-white" />
               </div>
               <span className="text-[10px] font-medium tracking-tight mt-1">
@@ -43,7 +43,7 @@ export function BottomNav() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={`flex flex-col items-center justify-center px-5 py-2 rounded-2xl transition-colors ${
+            className={`flex flex-col items-center justify-end cursor-pointer px-5 py-2 rounded-2xl transition-colors ${
               active
                 ? "bg-primary-fixed text-primary"
                 : "text-outline hover:text-primary"
