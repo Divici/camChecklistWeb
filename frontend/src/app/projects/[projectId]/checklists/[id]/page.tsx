@@ -40,12 +40,12 @@ export default function ChecklistPage() {
   const { data: project } = useProject(projectId);
   const { data: checklist } = useChecklist(projectId, id);
   const { data: items } = useItems(id);
-  const toggleItem = useToggleItem(id);
-  const createItem = useCreateItem(id);
+  const toggleItem = useToggleItem(id, projectId);
+  const createItem = useCreateItem(id, projectId);
   const updateItem = useUpdateItem(id);
-  const deleteItem = useDeleteItem(id);
-  const voiceCheck = useVoiceCheck(id);
-  const photoCheck = usePhotoCheck(id);
+  const deleteItem = useDeleteItem(id, projectId);
+  const voiceCheck = useVoiceCheck(id, projectId);
+  const photoCheck = usePhotoCheck(id, projectId);
 
   // UI state
   const [showCamera, setShowCamera] = useState(false);

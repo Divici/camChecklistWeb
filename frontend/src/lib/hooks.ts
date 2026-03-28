@@ -8,6 +8,25 @@ import {
 import { apiFetch, API_BASE } from "./api";
 import type { Project, Checklist, Item } from "./types";
 
+// ── Helpers ──
+
+/** Invalidate the checklist and project queries that derive progress from items */
+function invalidateProgressQueries(
+  qc: ReturnType<typeof useQueryClient>,
+  checklistId: number | string,
+  projectId?: number | string
+) {
+  // Refetch items list
+  qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+  // Refetch checklist-level data (progress_percentage, remaining_count, etc.)
+  if (projectId) {
+    qc.invalidateQueries({ queryKey: ["projects", projectId, "checklists"] });
+    qc.invalidateQueries({ queryKey: ["projects", projectId] });
+  }
+  // Refetch the projects list (has aggregate progress)
+  qc.invalidateQueries({ queryKey: ["projects"], exact: true });
+}
+
 // ── Queries ──
 
 export function useProjects() {
@@ -62,7 +81,7 @@ export function useCreateProject() {
         body: JSON.stringify({ project: data }),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["projects"], exact: true });
     },
   });
 }
@@ -76,7 +95,8 @@ export function useUpdateProject(id: number | string) {
         body: JSON.stringify({ project: data }),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["projects", id] });
+      qc.invalidateQueries({ queryKey: ["projects"], exact: true });
     },
   });
 }
@@ -87,7 +107,7 @@ export function useDeleteProject() {
     mutationFn: (id: number | string) =>
       apiFetch<void>(`/projects/${id}`, { method: "DELETE" }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["projects"], exact: true });
     },
   });
 }
@@ -101,10 +121,9 @@ export function useCreateChecklist(projectId: number | string) {
         body: JSON.stringify({ checklist: data }),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["projects", projectId, "checklists"],
-      });
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["projects", projectId, "checklists"] });
+      qc.invalidateQueries({ queryKey: ["projects", projectId] });
+      qc.invalidateQueries({ queryKey: ["projects"], exact: true });
     },
   });
 }
@@ -121,9 +140,7 @@ export function useUpdateChecklist(
         body: JSON.stringify({ checklist: data }),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["projects", projectId, "checklists"],
-      });
+      qc.invalidateQueries({ queryKey: ["projects", projectId, "checklists"] });
     },
   });
 }
@@ -136,15 +153,14 @@ export function useDeleteChecklist(projectId: number | string) {
         method: "DELETE",
       }),
     onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["projects", projectId, "checklists"],
-      });
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["projects", projectId, "checklists"] });
+      qc.invalidateQueries({ queryKey: ["projects", projectId] });
+      qc.invalidateQueries({ queryKey: ["projects"], exact: true });
     },
   });
 }
 
-export function useCreateItem(checklistId: number | string) {
+export function useCreateItem(checklistId: number | string, projectId?: number | string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { text: string; priority?: string }) =>
@@ -153,13 +169,12 @@ export function useCreateItem(checklistId: number | string) {
         body: JSON.stringify({ item: data }),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      invalidateProgressQueries(qc, checklistId, projectId);
     },
   });
 }
 
-export function useToggleItem(checklistId: number | string) {
+export function useToggleItem(checklistId: number | string, projectId?: number | string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -173,9 +188,29 @@ export function useToggleItem(checklistId: number | string) {
         method: "PATCH",
         body: JSON.stringify({ item: { completed } }),
       }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
-      qc.invalidateQueries({ queryKey: ["projects"] });
+    // Optimistic update: flip the item in the cache immediately
+    onMutate: async ({ itemId, completed }) => {
+      const key = ["checklists", checklistId, "items"];
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Item[]>(key);
+      if (previous) {
+        qc.setQueryData<Item[]>(key, previous.map((item) =>
+          String(item.id) === String(itemId)
+            ? { ...item, completed, completed_at: completed ? new Date().toISOString() : null }
+            : item
+        ));
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      // Roll back on error
+      if (context?.previous) {
+        qc.setQueryData(["checklists", checklistId, "items"], context.previous);
+      }
+    },
+    onSettled: () => {
+      // Always refetch to sync with server truth
+      invalidateProgressQueries(qc, checklistId, projectId);
     },
   });
 }
@@ -194,7 +229,7 @@ export function useUpdateItem(checklistId: number | string) {
   });
 }
 
-export function useDeleteItem(checklistId: number | string) {
+export function useDeleteItem(checklistId: number | string, projectId?: number | string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (itemId: number | string) =>
@@ -202,15 +237,14 @@ export function useDeleteItem(checklistId: number | string) {
         method: "DELETE",
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      invalidateProgressQueries(qc, checklistId, projectId);
     },
   });
 }
 
 // ── AI Mutations ──
 
-export function useVoiceCheck(checklistId: number | string) {
+export function useVoiceCheck(checklistId: number | string, projectId?: number | string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (transcript: string) => {
@@ -220,13 +254,12 @@ export function useVoiceCheck(checklistId: number | string) {
       );
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      invalidateProgressQueries(qc, checklistId, projectId);
     },
   });
 }
 
-export function usePhotoCheck(checklistId: number | string) {
+export function usePhotoCheck(checklistId: number | string, projectId?: number | string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (imageFile: File) => {
@@ -240,8 +273,7 @@ export function usePhotoCheck(checklistId: number | string) {
       return res.json() as Promise<{ checked_items: Item[]; reasoning: string }>;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
-      qc.invalidateQueries({ queryKey: ["projects"] });
+      invalidateProgressQueries(qc, checklistId, projectId);
     },
   });
 }
