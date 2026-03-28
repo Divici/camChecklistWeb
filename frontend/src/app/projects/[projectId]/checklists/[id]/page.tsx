@@ -193,6 +193,10 @@ export default function ChecklistPage() {
 
   const isAiProcessing = voiceCheck.isPending || photoCheck.isPending;
 
+  // Track which items are mid-mutation
+  const deletingItemId = deleteItem.isPending ? deleteItem.variables : null;
+  const togglingItemId = toggleItem.isPending ? toggleItem.variables?.itemId : null;
+
   // Sort: completed first, then by position
   const sortedItems = items
     ? [...items].sort((a, b) => {
@@ -258,13 +262,21 @@ export default function ChecklistPage() {
           {sortedItems.map((item) => {
             const isCompleted = item.completed;
             const isActive = item.id === activeItemId;
+            const isItemBusy =
+              String(deletingItemId) === String(item.id) ||
+              String(togglingItemId) === String(item.id);
 
             if (isCompleted) {
               return (
                 <div
                   key={item.id}
-                  className="group flex items-center p-5 bg-surface-container-low rounded-2xl transition-all hover:bg-surface-container hover:translate-x-1"
+                  className={`group flex items-center p-5 bg-surface-container-low rounded-2xl transition-all relative ${isItemBusy ? "opacity-50 pointer-events-none" : "hover:bg-surface-container hover:translate-x-1"}`}
                 >
+                  {isItemBusy && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                    </div>
+                  )}
                   <div className="mr-4">
                     <button
                       onClick={() => handleToggle(item)}
@@ -336,8 +348,13 @@ export default function ChecklistPage() {
               return (
                 <div
                   key={item.id}
-                  className="group flex items-center p-5 bg-surface-container-highest rounded-2xl transition-all shadow-sm ring-2 ring-primary/10"
+                  className={`group flex items-center p-5 bg-surface-container-highest rounded-2xl transition-all shadow-sm ring-2 ring-primary/10 relative ${isItemBusy ? "opacity-50 pointer-events-none" : ""}`}
                 >
+                  {isItemBusy && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                    </div>
+                  )}
                   <div className="mr-4">
                     <button
                       onClick={() => handleToggle(item)}
@@ -405,8 +422,13 @@ export default function ChecklistPage() {
             return (
               <div
                 key={item.id}
-                className="group flex items-center p-5 bg-surface-container-low rounded-2xl transition-all hover:bg-surface-container"
+                className={`group flex items-center p-5 bg-surface-container-low rounded-2xl transition-all relative ${isItemBusy ? "opacity-50 pointer-events-none" : "hover:bg-surface-container"}`}
               >
+                {isItemBusy && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  </div>
+                )}
                 <div className="mr-4">
                   <button
                     onClick={() => handleToggle(item)}
