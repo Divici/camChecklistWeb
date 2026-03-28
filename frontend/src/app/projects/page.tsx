@@ -6,6 +6,7 @@ import { ListChecks, PlusCircle, Mic, Trash2, Pencil, X, Check } from "lucide-re
 import { useProjects, useCreateProject, useDeleteProject, useUpdateProject } from "@/lib/hooks";
 import { ProgressBar } from "@/components/progress-bar";
 import { StatusBadge } from "@/components/status-badge";
+import { PageSpinner } from "@/components/page-spinner";
 
 function progressColor(progress: number, status: string) {
   const s = status.toLowerCase();
@@ -259,13 +260,15 @@ export default function ProjectsPage() {
           Your Projects
         </h2>
         <p className="text-on-surface-variant mt-2 text-lg">
-          {isLoading
-            ? "Loading projects..."
-            : error
-              ? "Could not load projects."
-              : `You have ${projects?.length ?? 0} active project${projects?.length === 1 ? "" : "s"} today.`}
+          {error
+            ? "Could not load projects."
+            : !isLoading
+              ? `You have ${projects?.length ?? 0} active project${projects?.length === 1 ? "" : "s"} today.`
+              : "\u00A0"}
         </p>
       </section>
+
+      {isLoading && <PageSpinner />}
 
       {/* Project Cards */}
       <div className="grid grid-cols-1 gap-6">

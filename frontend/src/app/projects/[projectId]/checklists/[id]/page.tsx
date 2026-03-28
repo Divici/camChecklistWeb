@@ -32,14 +32,16 @@ import { useVoiceRecognition } from "@/hooks/use-voice-recognition";
 import { useCamera } from "@/hooks/use-camera";
 import { resizeImage } from "@/lib/image-utils";
 import { ConfirmationToast } from "@/components/confirmation-toast";
+import { PageSpinner } from "@/components/page-spinner";
 import type { Item } from "@/lib/types";
 
 export default function ChecklistPage() {
   const { projectId, id } = useParams<{ projectId: string; id: string }>();
   const router = useRouter();
   const { data: project } = useProject(projectId);
-  const { data: checklist } = useChecklist(projectId, id);
-  const { data: items } = useItems(id);
+  const { data: checklist, isLoading: checklistLoading } = useChecklist(projectId, id);
+  const { data: items, isLoading: itemsLoading } = useItems(id);
+  const isLoading = checklistLoading || itemsLoading;
   const toggleItem = useToggleItem(id, projectId);
   const createItem = useCreateItem(id, projectId);
   const updateItem = useUpdateItem(id);
@@ -219,7 +221,7 @@ export default function ChecklistPage() {
           </span>
         </div>
         <h2 className="font-headline font-bold text-3xl md:text-4xl text-on-surface tracking-tight">
-          {checklist?.name ?? "Loading..."}
+          {checklist?.name ?? "\u00A0"}
         </h2>
         {checklist?.description && (
           <p className="text-on-surface-variant font-body leading-relaxed max-w-md">
@@ -227,6 +229,8 @@ export default function ChecklistPage() {
           </p>
         )}
       </header>
+
+      {isLoading && <PageSpinner />}
 
       {/* Checklist Canvas */}
       <div className="space-y-4">

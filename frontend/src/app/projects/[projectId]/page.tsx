@@ -19,6 +19,7 @@ import {
 import { useProject, useChecklists, useCreateChecklist, useDeleteChecklist } from "@/lib/hooks";
 import { ProgressRing } from "@/components/progress-ring";
 import { ProgressBar } from "@/components/progress-bar";
+import { PageSpinner } from "@/components/page-spinner";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   countertops: Package,
@@ -116,7 +117,7 @@ export default function ProjectDetailPage() {
               Active Project
             </span>
             <h2 className="font-headline font-bold text-4xl text-on-surface tracking-tight leading-none">
-              {isLoading ? "Loading..." : project?.name}
+              {project?.name ?? "\u00A0"}
             </h2>
           </div>
           <button
@@ -128,6 +129,8 @@ export default function ProjectDetailPage() {
           </button>
         </div>
       </section>
+
+      {isLoading && <PageSpinner />}
 
       {/* Checklist Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
