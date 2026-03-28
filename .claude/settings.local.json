@@ -1,14 +1,22 @@
 {
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .forge/gate-check.js"
-          }
-        ]
-      }
+  "permissions": {
+    "allow": [
+      "Bash(bundle install:*)",
+      "Bash(npm install:*)",
+      "Bash(where ruby:*)",
+      "Bash(find '/c/Users/doa92/Desktop/Gauntlet Projects/camChecklistWeb' -type f -name *PRD* -o -name *prd* -o -name *requirements* -o -name PRESEARCH*)",
+      "Bash(grep -r from.*button 'C:\\\\Users\\\\doa92\\\\Desktop\\\\Gauntlet Projects\\\\camChecklistWeb\\\\frontend\\\\src')",
+      "Bash(xargs grep:*)",
+      "Bash(grep:*)",
+      "Bash(rm -rf .next/types)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next:*)",
+      "Bash(where gem:*)",
+      "Bash(where bundle:*)",
+      "Bash(where rails:*)",
+      "Bash(winget install:*)",
+      "Bash(taskkill //IM ruby.exe //F)",
+      "Bash(taskkill //IM node.exe //F)"
     ]
   }
 }

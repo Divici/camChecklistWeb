@@ -12,6 +12,12 @@ decision-log.md
 .env.local
 .env.production
 
+# Rails tmp, logs, and local databases
+api/tmp/
+api/log/
+api/db/*.sqlite3
+api/db/*.sqlite3-*
+
 # OS files
 .DS_Store
 Thumbs.db
