@@ -10,20 +10,19 @@ import type { Project, Checklist, Item } from "./types";
 
 // ── Helpers ──
 
-/** Invalidate the checklist and project queries that derive progress from items */
-function invalidateProgressQueries(
+/** Invalidate all queries that derive from item/checklist/project state */
+function invalidateAll(
   qc: ReturnType<typeof useQueryClient>,
-  checklistId: number | string,
+  checklistId?: number | string,
   projectId?: number | string
 ) {
-  // Refetch items list
-  qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
-  // Refetch checklist-level data (progress_percentage, remaining_count, etc.)
+  if (checklistId) {
+    qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+  }
   if (projectId) {
     qc.invalidateQueries({ queryKey: ["projects", projectId, "checklists"] });
     qc.invalidateQueries({ queryKey: ["projects", projectId] });
   }
-  // Refetch the projects list (has aggregate progress)
   qc.invalidateQueries({ queryKey: ["projects"], exact: true });
 }
 
@@ -70,7 +69,7 @@ export function useItems(checklistId: number | string) {
   });
 }
 
-// ── Mutations ──
+// ── Project Mutations ──
 
 export function useCreateProject() {
   const qc = useQueryClient();
@@ -80,8 +79,10 @@ export function useCreateProject() {
         method: "POST",
         body: JSON.stringify({ project: data }),
       }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"], exact: true });
+    onSuccess: (newProject) => {
+      qc.setQueryData<Project[]>(["projects"], (old) =>
+        old ? [...old, newProject] : [newProject]
+      );
     },
   });
 }
@@ -94,7 +95,20 @@ export function useUpdateProject(id: number | string) {
         method: "PATCH",
         body: JSON.stringify({ project: data }),
       }),
-    onSuccess: () => {
+    onMutate: async (data) => {
+      await qc.cancelQueries({ queryKey: ["projects"], exact: true });
+      const previous = qc.getQueryData<Project[]>(["projects"]);
+      if (previous) {
+        qc.setQueryData<Project[]>(["projects"], previous.map((p) =>
+          String(p.id) === String(id) ? { ...p, ...data } : p
+        ));
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) qc.setQueryData(["projects"], context.previous);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["projects", id] });
       qc.invalidateQueries({ queryKey: ["projects"], exact: true });
     },
@@ -106,11 +120,26 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: (id: number | string) =>
       apiFetch<void>(`/projects/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ["projects"], exact: true });
+      const previous = qc.getQueryData<Project[]>(["projects"]);
+      if (previous) {
+        qc.setQueryData<Project[]>(["projects"], previous.filter((p) =>
+          String(p.id) !== String(id)
+        ));
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) qc.setQueryData(["projects"], context.previous);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["projects"], exact: true });
     },
   });
 }
+
+// ── Checklist Mutations ──
 
 export function useCreateChecklist(projectId: number | string) {
   const qc = useQueryClient();
@@ -120,8 +149,11 @@ export function useCreateChecklist(projectId: number | string) {
         method: "POST",
         body: JSON.stringify({ checklist: data }),
       }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects", projectId, "checklists"] });
+    onSuccess: (newChecklist) => {
+      qc.setQueryData<Checklist[]>(
+        ["projects", projectId, "checklists"],
+        (old) => (old ? [...old, newChecklist] : [newChecklist])
+      );
       qc.invalidateQueries({ queryKey: ["projects", projectId] });
       qc.invalidateQueries({ queryKey: ["projects"], exact: true });
     },
@@ -139,7 +171,23 @@ export function useUpdateChecklist(
         method: "PATCH",
         body: JSON.stringify({ checklist: data }),
       }),
-    onSuccess: () => {
+    onMutate: async (data) => {
+      const key = ["projects", projectId, "checklists"];
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Checklist[]>(key);
+      if (previous) {
+        qc.setQueryData<Checklist[]>(key, previous.map((c) =>
+          String(c.id) === String(id) ? { ...c, ...data } : c
+        ));
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(["projects", projectId, "checklists"], context.previous);
+      }
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["projects", projectId, "checklists"] });
     },
   });
@@ -152,13 +200,31 @@ export function useDeleteChecklist(projectId: number | string) {
       apiFetch<void>(`/projects/${projectId}/checklists/${id}`, {
         method: "DELETE",
       }),
-    onSuccess: () => {
+    onMutate: async (id) => {
+      const key = ["projects", projectId, "checklists"];
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Checklist[]>(key);
+      if (previous) {
+        qc.setQueryData<Checklist[]>(key, previous.filter((c) =>
+          String(c.id) !== String(id)
+        ));
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(["projects", projectId, "checklists"], context.previous);
+      }
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["projects", projectId, "checklists"] });
       qc.invalidateQueries({ queryKey: ["projects", projectId] });
       qc.invalidateQueries({ queryKey: ["projects"], exact: true });
     },
   });
 }
+
+// ── Item Mutations ──
 
 export function useCreateItem(checklistId: number | string, projectId?: number | string) {
   const qc = useQueryClient();
@@ -168,8 +234,12 @@ export function useCreateItem(checklistId: number | string, projectId?: number |
         method: "POST",
         body: JSON.stringify({ item: data }),
       }),
-    onSuccess: () => {
-      invalidateProgressQueries(qc, checklistId, projectId);
+    onSuccess: (newItem) => {
+      qc.setQueryData<Item[]>(
+        ["checklists", checklistId, "items"],
+        (old) => (old ? [...old, newItem] : [newItem])
+      );
+      invalidateAll(qc, checklistId, projectId);
     },
   });
 }
@@ -188,7 +258,6 @@ export function useToggleItem(checklistId: number | string, projectId?: number |
         method: "PATCH",
         body: JSON.stringify({ item: { completed } }),
       }),
-    // Optimistic update: flip the item in the cache immediately
     onMutate: async ({ itemId, completed }) => {
       const key = ["checklists", checklistId, "items"];
       await qc.cancelQueries({ queryKey: key });
@@ -203,14 +272,12 @@ export function useToggleItem(checklistId: number | string, projectId?: number |
       return { previous };
     },
     onError: (_err, _vars, context) => {
-      // Roll back on error
       if (context?.previous) {
         qc.setQueryData(["checklists", checklistId, "items"], context.previous);
       }
     },
     onSettled: () => {
-      // Always refetch to sync with server truth
-      invalidateProgressQueries(qc, checklistId, projectId);
+      invalidateAll(qc, checklistId, projectId);
     },
   });
 }
@@ -223,7 +290,23 @@ export function useUpdateItem(checklistId: number | string) {
         method: "PATCH",
         body: JSON.stringify({ item: data }),
       }),
-    onSuccess: () => {
+    onMutate: async ({ itemId, data }) => {
+      const key = ["checklists", checklistId, "items"];
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Item[]>(key);
+      if (previous) {
+        qc.setQueryData<Item[]>(key, previous.map((item) =>
+          String(item.id) === String(itemId) ? { ...item, ...data } : item
+        ));
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(["checklists", checklistId, "items"], context.previous);
+      }
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
     },
   });
@@ -236,8 +319,24 @@ export function useDeleteItem(checklistId: number | string, projectId?: number |
       apiFetch<void>(`/checklists/${checklistId}/items/${itemId}`, {
         method: "DELETE",
       }),
-    onSuccess: () => {
-      invalidateProgressQueries(qc, checklistId, projectId);
+    onMutate: async (itemId) => {
+      const key = ["checklists", checklistId, "items"];
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Item[]>(key);
+      if (previous) {
+        qc.setQueryData<Item[]>(key, previous.filter((item) =>
+          String(item.id) !== String(itemId)
+        ));
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(["checklists", checklistId, "items"], context.previous);
+      }
+    },
+    onSettled: () => {
+      invalidateAll(qc, checklistId, projectId);
     },
   });
 }
@@ -254,7 +353,7 @@ export function useVoiceCheck(checklistId: number | string, projectId?: number |
       );
     },
     onSuccess: () => {
-      invalidateProgressQueries(qc, checklistId, projectId);
+      invalidateAll(qc, checklistId, projectId);
     },
   });
 }
@@ -273,7 +372,7 @@ export function usePhotoCheck(checklistId: number | string, projectId?: number |
       return res.json() as Promise<{ checked_items: Item[]; reasoning: string }>;
     },
     onSuccess: () => {
-      invalidateProgressQueries(qc, checklistId, projectId);
+      invalidateAll(qc, checklistId, projectId);
     },
   });
 }
