@@ -153,9 +153,8 @@ export function useCreateItem(checklistId: number | string) {
         body: JSON.stringify({ item: data }),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["checklists", checklistId, "items"],
-      });
+      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 }
@@ -175,9 +174,8 @@ export function useToggleItem(checklistId: number | string) {
         body: JSON.stringify({ item: { completed } }),
       }),
     onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["checklists", checklistId, "items"],
-      });
+      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 }
@@ -204,9 +202,8 @@ export function useDeleteItem(checklistId: number | string) {
         method: "DELETE",
       }),
     onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["checklists", checklistId, "items"],
-      });
+      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 }
@@ -224,6 +221,7 @@ export function useVoiceCheck(checklistId: number | string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 }
@@ -243,6 +241,7 @@ export function usePhotoCheck(checklistId: number | string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 }
