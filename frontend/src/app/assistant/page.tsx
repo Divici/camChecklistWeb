@@ -299,13 +299,13 @@ export default function AssistantPage() {
                       return (
                         <div
                           key={j}
-                          className="bg-tertiary-container/30 p-3 rounded-xl flex items-center gap-3"
+                          className="bg-secondary-container/30 p-3 rounded-xl flex items-center gap-3"
                         >
-                          <div className="w-7 h-7 rounded-full bg-tertiary-container flex items-center justify-center shrink-0">
-                            <Icon className="w-4 h-4 text-on-tertiary-container" />
+                          <div className="w-7 h-7 rounded-full bg-secondary-container flex items-center justify-center shrink-0">
+                            <Icon className="w-4 h-4 text-on-secondary-container" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="text-xs font-label font-semibold text-on-tertiary-container uppercase tracking-wider">
+                            <span className="text-xs font-label font-semibold text-on-secondary-container uppercase tracking-wider">
                               {ACTION_LABELS[action.type] || action.type}
                             </span>
                             <p className="font-body text-sm text-on-surface truncate">
