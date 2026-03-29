@@ -36,7 +36,7 @@ export default function RootLayout({
       <body className="font-body bg-surface-container-lowest text-on-surface min-h-full flex flex-col">
         <Providers>
           <Header />
-          <main className="flex-1 pt-16 pb-24">{children}</main>
+          <main className="flex-1 pt-16 pb-28">{children}</main>
           <BottomNav />
         </Providers>
       </body>

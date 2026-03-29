@@ -210,7 +210,7 @@ export default function ChecklistPage() {
   const activeItemId = sortedItems.find((i) => !i.completed)?.id;
 
   return (
-    <div className="px-6 pt-8 pb-48 max-w-2xl mx-auto min-h-screen">
+    <div className="px-6 pt-8 pb-56 max-w-2xl mx-auto min-h-screen">
       {/* Header */}
       <header className="mb-10 space-y-2">
         <div className="flex items-center gap-2 mb-2">
