@@ -55,8 +55,8 @@ export default function AssistantPage() {
   const [showSelector, setShowSelector] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: projects } = useProjects();
-  const { data: checklists } = useChecklists(selectedProjectId ?? "");
+  const { data: projects, isLoading: projectsLoading } = useProjects();
+  const { data: checklists, isLoading: checklistsLoading } = useChecklists(selectedProjectId ?? "");
 
   // Auto-select first project
   useEffect(() => {
@@ -164,6 +164,12 @@ export default function AssistantPage() {
       {/* Sticky selector bar */}
       <div className="sticky top-16 z-40 bg-primary px-4 py-3 flex items-center gap-2 shadow-md">
         {/* Project dropdown */}
+        {projectsLoading ? (
+          <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full">
+            <Loader2 className="w-4 h-4 text-on-primary animate-spin" />
+            <span className="text-sm font-semibold text-on-primary/70">Loading...</span>
+          </div>
+        ) : (
         <div className="relative">
           <button
             onClick={(e) => {
@@ -199,9 +205,15 @@ export default function AssistantPage() {
             </div>
           )}
         </div>
+        )}
 
         {/* Checklist dropdown */}
-        {checklists && checklists.length > 0 && (
+        {checklistsLoading ? (
+          <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full">
+            <Loader2 className="w-4 h-4 text-on-primary animate-spin" />
+            <span className="text-sm font-semibold text-on-primary/70">Loading...</span>
+          </div>
+        ) : checklists && checklists.length > 0 ? (
           <div className="relative">
             <button
               onClick={(e) => {
@@ -237,7 +249,7 @@ export default function AssistantPage() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Messages area */}
