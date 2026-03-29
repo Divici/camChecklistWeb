@@ -4,7 +4,7 @@ module Api
       before_action :set_project, only: [:show, :update, :destroy]
 
       def index
-        @projects = Project.all.order(created_at: :desc)
+        @projects = current_user.projects.order(created_at: :desc)
         render json: @projects
       end
 
@@ -13,7 +13,7 @@ module Api
       end
 
       def create
-        @project = Project.new(project_params)
+        @project = current_user.projects.build(project_params)
         if @project.save
           render json: @project, status: :created
         else
@@ -37,7 +37,7 @@ module Api
       private
 
       def set_project
-        @project = Project.find(params[:id])
+        @project = current_user.projects.find(params[:id])
       end
 
       def project_params

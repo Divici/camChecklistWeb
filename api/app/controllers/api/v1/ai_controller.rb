@@ -79,7 +79,10 @@ module Api
       private
 
       def set_checklist
-        @checklist = Checklist.includes(:items, :project).find(params[:checklist_id])
+        @checklist = Checklist.includes(:items, :project)
+                              .joins(project: :user)
+                              .where(users: { id: current_user.id })
+                              .find(params[:checklist_id])
       end
 
       def parse_faraday_error(error)

@@ -32,6 +32,9 @@ gem "rack-cors"
 # OpenRouter AI (OpenAI-compatible API for Claude and other models)
 gem "ruby-openai"
 
+# JWT for authentication tokens
+gem "jwt"
+
 # Langfuse observability
 gem "langfuse"
 

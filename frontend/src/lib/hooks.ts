@@ -276,9 +276,14 @@ export function usePhotoCheck(checklistId: number | string, projectId?: number |
     mutationFn: async (imageFile: File) => {
       const formData = new FormData();
       formData.append("image", imageFile);
+      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
       const res = await fetch(
         `${API_BASE}/api/v1/checklists/${checklistId}/photo`,
-        { method: "POST", body: formData }
+        {
+          method: "POST",
+          body: formData,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
       );
       if (!res.ok) {
         const body = await res.json().catch(() => null);

@@ -34,7 +34,9 @@ module Api
       private
 
       def set_checklist
-        @checklist = Checklist.find(params[:checklist_id])
+        @checklist = Checklist.joins(project: :user)
+                              .where(users: { id: current_user.id })
+                              .find(params[:checklist_id])
       end
 
       def set_item

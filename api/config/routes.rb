@@ -7,6 +7,11 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      namespace :auth do
+        post :google
+        post :guest
+        get :me
+      end
       resources :projects do
         resources :checklists, only: [:index, :show, :create, :update, :destroy]
       end

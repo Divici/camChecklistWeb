@@ -38,7 +38,7 @@ module Api
       private
 
       def set_project
-        @project = Project.find(params[:project_id])
+        @project = current_user.projects.find(params[:project_id])
       end
 
       def set_checklist

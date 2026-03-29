@@ -1,3 +1,11 @@
+export interface User {
+  id: number;
+  email: string | null;
+  name: string | null;
+  avatar_url: string | null;
+  provider: "google" | "guest";
+}
+
 export interface Project {
   id: number;
   name: string;

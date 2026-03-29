@@ -120,7 +120,7 @@ class AiService
 
     # Load all projects and their checklists for cross-project awareness
     other_context_lines = []
-    Project.includes(checklists: :items).find_each do |project|
+    @checklist.project.user&.projects&.includes(checklists: :items)&.find_each do |project|
       project.checklists.each do |cl|
         next if cl.id == @checklist.id
         items_summary = cl.items.order(:position).map { |item|

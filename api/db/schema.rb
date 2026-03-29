@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_29_000002) do
   create_table "checklists", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -40,8 +40,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_000003) do
     t.string "name", null: false
     t.string "status", default: "in_progress"
     t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["user_id"], name: "index_projects_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email"
+    t.string "name"
+    t.string "avatar_url"
+    t.string "google_uid"
+    t.string "provider", default: "guest", null: false
+    t.string "guest_token"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["google_uid"], name: "index_users_on_google_uid", unique: true, where: "google_uid IS NOT NULL"
+    t.index ["guest_token"], name: "index_users_on_guest_token", unique: true, where: "guest_token IS NOT NULL"
   end
 
   add_foreign_key "checklists", "projects"
   add_foreign_key "items", "checklists"
+  add_foreign_key "projects", "users"
 end

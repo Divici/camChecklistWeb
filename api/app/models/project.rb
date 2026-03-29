@@ -1,4 +1,5 @@
 class Project < ApplicationRecord
+  belongs_to :user, optional: true
   has_many :checklists, dependent: :destroy
   has_many :items, through: :checklists
 

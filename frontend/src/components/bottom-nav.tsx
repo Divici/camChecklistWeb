@@ -12,6 +12,9 @@ const tabs = [
 export function BottomNav() {
   const pathname = usePathname();
 
+  // Hide on login page
+  if (pathname === "/login") return null;
+
   function isActive(href: string) {
     return pathname.startsWith(href);
   }
