@@ -74,8 +74,8 @@ export default function ChecklistPage() {
           setToastMessage(names ? `Checked: ${names}` : data.reasoning);
           setTimeout(() => setToastMessage(null), 4000);
         },
-        onError: () => {
-          setErrorMessage("Voice check failed. Try again.");
+        onError: (err) => {
+          setErrorMessage(err instanceof Error ? err.message : "Voice check failed. Try again.");
           setTimeout(() => setErrorMessage(null), 4000);
         },
       });
@@ -115,8 +115,8 @@ export default function ChecklistPage() {
         setTextFallback("");
         setTimeout(() => setToastMessage(null), 4000);
       },
-      onError: () => {
-        setErrorMessage("AI check failed. Try again.");
+      onError: (err) => {
+        setErrorMessage(err instanceof Error ? err.message : "AI check failed. Try again.");
         setTimeout(() => setErrorMessage(null), 4000);
       },
     });
@@ -143,8 +143,8 @@ export default function ChecklistPage() {
         setToastMessage(names ? `Photo checked: ${names}` : data.reasoning);
         setTimeout(() => setToastMessage(null), 4000);
       },
-      onError: () => {
-        setErrorMessage("Photo check failed. Try again.");
+      onError: (err) => {
+        setErrorMessage(err instanceof Error ? err.message : "Photo check failed. Try again.");
         setTimeout(() => setErrorMessage(null), 4000);
       },
     });
@@ -162,8 +162,8 @@ export default function ChecklistPage() {
           setToastMessage(names ? `Photo checked: ${names}` : data.reasoning);
           setTimeout(() => setToastMessage(null), 4000);
         },
-        onError: () => {
-          setErrorMessage("Photo check failed. Try again.");
+        onError: (err) => {
+          setErrorMessage(err instanceof Error ? err.message : "Photo check failed. Try again.");
           setTimeout(() => setErrorMessage(null), 4000);
         },
       });

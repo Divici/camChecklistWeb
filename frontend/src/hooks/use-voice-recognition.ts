@@ -38,7 +38,14 @@ export function useVoiceRecognition({
     };
 
     recognition.onerror = (event) => {
-      onError?.(event.error);
+      const friendly: Record<string, string> = {
+        "not-allowed": "Microphone access denied. Check your browser and OS permissions.",
+        "no-speech": "No speech detected. Try again.",
+        "audio-capture": "No microphone found. Check your device.",
+        "network": "Network error during speech recognition.",
+        "aborted": "Speech recognition was aborted.",
+      };
+      onError?.(friendly[event.error] || event.error);
       setIsListening(false);
     };
 

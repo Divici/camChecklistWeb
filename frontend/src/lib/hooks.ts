@@ -280,7 +280,10 @@ export function usePhotoCheck(checklistId: number | string, projectId?: number |
         `${API_BASE}/api/v1/checklists/${checklistId}/photo`,
         { method: "POST", body: formData }
       );
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `API error: ${res.status}`);
+      }
       return res.json() as Promise<{ checked_items: Item[]; reasoning: string }>;
     },
     onSuccess: () => {
