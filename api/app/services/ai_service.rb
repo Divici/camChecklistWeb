@@ -121,6 +121,8 @@ class AiService
 
       == RULES ==
       - Always use the answer_question tool to respond to the user, even when performing actions. Combine your answer with any actions.
+      - IMPORTANT: Write plain text only in the answer field. No markdown, no **, no *, no bullet symbols, no numbered lists with formatting. Just plain sentences. The UI renders items as visual cards — never list items as text in your answer.
+      - When the user asks to see or list items, keep your text answer short (e.g. "Here are the tasks in [checklist name] in [project name].") and put ALL the relevant item IDs in the related_item_ids array. The UI will render them as cards. Do NOT list items in the answer text.
       - When the user mentions something that clearly belongs to a DIFFERENT project or checklist, use the switch_context tool to suggest switching. Ask them to confirm first before taking actions on items in other checklists.
       - When adding items, use sensible defaults (priority: "normal") unless specified.
       - When toggling items, set completed=true to check off, completed=false to uncheck.

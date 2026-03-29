@@ -4,7 +4,6 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import {
   Mic,
   Sparkles,
-  ArrowRight,
   Send,
   Loader2,
   ChevronDown,
@@ -342,29 +341,6 @@ export default function AssistantPage() {
                         key={item.id}
                         className="bg-surface-container-low p-4 rounded-2xl flex items-center gap-3"
                       >
-                        <div
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
-                            item.completed
-                              ? "bg-secondary border-secondary"
-                              : "border-primary/20"
-                          }`}
-                        >
-                          {item.completed && (
-                            <svg
-                              className="w-3 h-3 text-on-secondary"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={3}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          )}
-                        </div>
                         <div className="flex-1 min-w-0">
                           <span
                             className={`font-headline font-bold text-sm ${
@@ -375,8 +351,15 @@ export default function AssistantPage() {
                           >
                             {item.text}
                           </span>
+                          {item.completed && (
+                            <span className="ml-2 text-[10px] font-label font-semibold text-secondary uppercase tracking-wider">
+                              Done
+                            </span>
+                          )}
                         </div>
-                        <ArrowRight className="w-4 h-4 text-outline-variant shrink-0" />
+                        <span className="text-[10px] font-label text-on-surface-variant uppercase tracking-wider shrink-0">
+                          {item.priority}
+                        </span>
                       </div>
                     ))}
                   </div>
