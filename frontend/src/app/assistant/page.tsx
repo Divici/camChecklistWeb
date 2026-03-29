@@ -388,7 +388,7 @@ export default function AssistantPage() {
       </div>
 
       {/* Input Area */}
-      <div className="fixed bottom-24 left-0 w-full px-4 z-40">
+      <div className="fixed bottom-28 left-0 w-full px-4 z-40">
         <div className="max-w-2xl mx-auto">
           <div className="bg-surface-container/80 backdrop-blur-xl rounded-full flex items-center gap-2 px-4 py-2 shadow-2xl">
             <input
