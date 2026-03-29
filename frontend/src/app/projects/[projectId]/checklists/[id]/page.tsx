@@ -66,8 +66,13 @@ export default function ChecklistPage() {
     onResult: (transcript) => {
       voiceCheck.mutate(transcript, {
         onSuccess: (data) => {
-          const names = data.checked_items.map((i) => i.text).join(", ");
-          setToastMessage(names ? `Checked: ${names}` : data.reasoning);
+          const checkedNames = data.checked_items.map((i) => i.text).join(", ");
+          const deletedNames = (data.deleted_items || []).map((i: { text: string }) => i.text).join(", ");
+          const msg = [
+            checkedNames ? `Checked: ${checkedNames}` : "",
+            deletedNames ? `Removed: ${deletedNames}` : "",
+          ].filter(Boolean).join(". ") || data.reasoning;
+          setToastMessage(msg);
           setTimeout(() => setToastMessage(null), 4000);
         },
         onError: (err) => {

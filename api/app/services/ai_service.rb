@@ -6,13 +6,14 @@ class AiService
     @items = checklist.items.order(:position)
   end
 
-  # Process voice transcript — match to checklist items and check them off
+  # Process voice transcript — match to checklist items, check off or delete
   def process_voice(transcript)
     response = call_claude(
       messages: [{ role: "user", content: transcript }],
-      tools: [check_items_tool]
+      tools: [check_items_tool, delete_items_tool],
+      system_override: voice_system_prompt
     )
-    handle_tool_response(response, "voice")
+    handle_voice_response(response)
   end
 
   # Process photo — send image to Claude vision to match checklist items
@@ -63,6 +64,31 @@ class AiService
   end
 
   private
+
+  def voice_system_prompt
+    items_text = @items.map { |item|
+      status = item.completed? ? "[DONE]" : "[TODO]"
+      "#{status} ID:#{item.id} - #{item.text} (priority: #{item.priority})"
+    }.join("\n")
+
+    <<~PROMPT
+      You are CheckVoice, an AI assistant that helps users manage checklists via voice.
+
+      Current checklist: #{@checklist.name}
+      #{@checklist.description.present? ? "Description: #{@checklist.description}" : ""}
+
+      Items:
+      #{items_text}
+
+      You have two tools: check_items (mark as complete) and delete_items (remove from list).
+
+      CRITICAL RULES for choosing the right tool:
+      - "remove", "delete", "take off", "get rid of" = use delete_items to REMOVE the item from the list entirely.
+      - "done", "finished", "completed", "just did" = use check_items to MARK as complete.
+      - When matching voice input to items, be generous — "just got out of the carwash" should match "Wash Car".
+      - Only act on items that have a reasonable match. Return empty arrays if nothing matches.
+    PROMPT
+  end
 
   def system_prompt
     items_text = @items.map { |item|
@@ -124,9 +150,9 @@ class AiService
       - IMPORTANT: Write plain text only in the answer field. No markdown, no **, no *, no bullet symbols, no numbered lists with formatting. Just plain sentences. The UI renders items as visual cards — never list items as text in your answer.
       - When the user asks to see or list items, keep your text answer short (e.g. "Here are the tasks in [checklist name] in [project name].") and put ALL the relevant item IDs in the related_item_ids array. The UI will render them as cards. Do NOT list items in the answer text.
       - When the user mentions something that clearly belongs to a DIFFERENT project or checklist, use the switch_context tool to suggest switching. Ask them to confirm first before taking actions on items in other checklists.
+      - BEFORE adding an item, check if it fits the current checklist's theme/purpose. If the item clearly belongs to a DIFFERENT checklist (e.g. adding "meeting with client" to a laundry list when a client-related checklist exists), do NOT add it. Instead use switch_context to suggest the correct checklist, and explain why in your answer. Only add the item if the user confirms or if it genuinely fits the current checklist.
       - When adding items, use sensible defaults (priority: "normal") unless specified.
       - When toggling items, set completed=true to check off, completed=false to uncheck.
-      - Be helpful and proactive — if the user says "add buy milk to my groceries list" and that list exists in another project, suggest switching first.
       - You may call multiple tools in one response (e.g. add an item AND answer).
     PROMPT
   end
@@ -150,6 +176,31 @@ class AiService
             reasoning: {
               type: "string",
               description: "Brief explanation of why these items were matched"
+            }
+          },
+          required: ["item_ids", "reasoning"]
+        }
+      }
+    }
+  end
+
+  def delete_items_tool
+    {
+      type: "function",
+      function: {
+        name: "delete_items",
+        description: "Remove/delete items from the checklist entirely. Use when the user says remove, delete, take off, or get rid of.",
+        parameters: {
+          type: "object",
+          properties: {
+            item_ids: {
+              type: "array",
+              items: { type: "integer" },
+              description: "Array of item IDs to delete"
+            },
+            reasoning: {
+              type: "string",
+              description: "Brief explanation of why these items were matched for deletion"
             }
           },
           required: ["item_ids", "reasoning"]
@@ -318,6 +369,45 @@ class AiService
   end
 
   # ── Response handlers ──
+
+  def handle_voice_response(response)
+    message = response.dig("choices", 0, "message")
+    tool_calls = message&.dig("tool_calls") || []
+
+    checked_items = []
+    deleted_items = []
+    reasoning = ""
+
+    tool_calls.each do |tc|
+      name = tc.dig("function", "name")
+      input = JSON.parse(tc.dig("function", "arguments"))
+
+      case name
+      when "check_items"
+        reasoning = input["reasoning"] || ""
+        (input["item_ids"] || []).each do |id|
+          item = @items.find { |i| i.id == id }
+          next unless item && !item.completed?
+          item.update!(completed: true, completed_via: "voice", completed_at: Time.current)
+          checked_items << item
+        end
+      when "delete_items"
+        reasoning = input["reasoning"] || "" if reasoning.empty?
+        (input["item_ids"] || []).each do |id|
+          item = @items.find { |i| i.id == id }
+          next unless item
+          deleted_items << item.as_json
+          item.destroy!
+        end
+      end
+    end
+
+    {
+      checked_items: checked_items.map(&:as_json),
+      deleted_items: deleted_items,
+      reasoning: reasoning.presence || "No items matched"
+    }
+  end
 
   def handle_tool_response(response, completed_via)
     message = response.dig("choices", 0, "message")
