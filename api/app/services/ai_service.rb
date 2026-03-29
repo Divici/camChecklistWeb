@@ -121,7 +121,12 @@ class AiService
   def openrouter_client
     @openrouter_client ||= OpenAI::Client.new(
       access_token: ENV.fetch("OPENROUTER_API_KEY"),
-      uri_base: "https://openrouter.ai/api/v1"
+      uri_base: "https://openrouter.ai/api/v1",
+      log_errors: true,
+      extra_headers: {
+        "HTTP-Referer" => ENV.fetch("FRONTEND_URL", "http://localhost:3000"),
+        "X-Title" => "CheckVoice"
+      }
     )
   end
 
@@ -140,6 +145,13 @@ class AiService
       }
     )
     duration = Time.current - start_time
+
+    # Check for API errors
+    if response.is_a?(Hash) && response["error"]
+      error_msg = response.dig("error", "message") || response["error"].to_s
+      Rails.logger.error("OpenRouter API error: #{error_msg}")
+      raise "AI service error: #{error_msg}"
+    end
 
     # Log to Langfuse if available
     log_to_langfuse(messages, tools, response, duration) if langfuse_configured?

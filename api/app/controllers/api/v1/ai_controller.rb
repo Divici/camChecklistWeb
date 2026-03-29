@@ -9,7 +9,14 @@ module Api
         service = AiService.new(@checklist)
         result = service.process_voice(transcript)
         render json: result
-      rescue ActionController::ParameterMissing, StandardError => e
+      rescue ActionController::ParameterMissing => e
+        render json: { error: e.message }, status: :unprocessable_entity
+      rescue Faraday::Error => e
+        body = parse_faraday_error(e)
+        Rails.logger.error("OpenRouter API error: #{body}")
+        render json: { error: "AI service error: #{body}" }, status: :bad_gateway
+      rescue => e
+        Rails.logger.error("AI service error: #{e.message}")
         render json: { error: e.message }, status: :unprocessable_entity
       end
 
@@ -26,7 +33,12 @@ module Api
         service = AiService.new(@checklist)
         result = service.process_photo(image_data, content_type)
         render json: result
+      rescue Faraday::Error => e
+        body = parse_faraday_error(e)
+        Rails.logger.error("OpenRouter API error: #{body}")
+        render json: { error: "AI service error: #{body}" }, status: :bad_gateway
       rescue => e
+        Rails.logger.error("AI service error: #{e.message}")
         render json: { error: e.message }, status: :unprocessable_entity
       end
 
@@ -38,7 +50,12 @@ module Api
         render json: result
       rescue ActionController::ParameterMissing => e
         render json: { error: e.message }, status: :unprocessable_entity
+      rescue Faraday::Error => e
+        body = parse_faraday_error(e)
+        Rails.logger.error("OpenRouter API error: #{body}")
+        render json: { error: "AI service error: #{body}" }, status: :bad_gateway
       rescue => e
+        Rails.logger.error("AI service error: #{e.message}")
         render json: { error: e.message }, status: :unprocessable_entity
       end
 
@@ -46,6 +63,16 @@ module Api
 
       def set_checklist
         @checklist = Checklist.includes(:items).find(params[:checklist_id])
+      end
+
+      def parse_faraday_error(error)
+        if error.response
+          body = error.response[:body]
+          parsed = JSON.parse(body) rescue nil
+          parsed&.dig("error", "message") || parsed&.dig("error") || body
+        else
+          error.message
+        end
       end
     end
   end
