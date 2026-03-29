@@ -153,11 +153,11 @@ export default function ChecklistPage() {
   const deletingItemId = deleteItem.isPending ? deleteItem.variables : null;
   const togglingItemId = toggleItem.isPending ? toggleItem.variables?.itemId : null;
 
-  // Sort: uncompleted first by position, then completed at bottom
+  // Sort: completed first, then by position
   const sortedItems = items
     ? [...items].sort((a, b) => {
-        if (a.completed && !b.completed) return 1;
-        if (!a.completed && b.completed) return -1;
+        if (a.completed && !b.completed) return -1;
+        if (!a.completed && b.completed) return 1;
         return a.position - b.position;
       })
     : [];
@@ -166,7 +166,7 @@ export default function ChecklistPage() {
   const activeItemId = sortedItems.find((i) => !i.completed)?.id;
 
   return (
-    <div className="px-6 pt-8 pb-56 max-w-2xl mx-auto min-h-screen">
+    <div className="px-6 pt-8 pb-56 max-w-2xl mx-auto">
       {/* Header */}
       <header className="mb-10 space-y-2">
         <div className="flex items-center gap-2 mb-2">
