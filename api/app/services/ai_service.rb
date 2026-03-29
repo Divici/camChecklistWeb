@@ -1,5 +1,5 @@
 class AiService
-  CLAUDE_MODEL = "anthropic/claude-sonnet-4-6-20250514"
+  CLAUDE_MODEL = "anthropic/claude-sonnet-4.6"
 
   def initialize(checklist)
     @checklist = checklist
