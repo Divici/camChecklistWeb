@@ -59,10 +59,27 @@ module Api
         render json: { error: e.message }, status: :unprocessable_entity
       end
 
+      # POST /api/v1/checklists/:checklist_id/assistant
+      def assistant
+        question = params.require(:question)
+        service = AiService.new(@checklist)
+        result = service.assistant_ask(question)
+        render json: result
+      rescue ActionController::ParameterMissing => e
+        render json: { error: e.message }, status: :unprocessable_entity
+      rescue Faraday::Error => e
+        body = parse_faraday_error(e)
+        Rails.logger.error("OpenRouter API error: #{body}")
+        render json: { error: "AI service error: #{body}" }, status: :bad_gateway
+      rescue => e
+        Rails.logger.error("AI service error: #{e.message}")
+        render json: { error: e.message }, status: :unprocessable_entity
+      end
+
       private
 
       def set_checklist
-        @checklist = Checklist.includes(:items).find(params[:checklist_id])
+        @checklist = Checklist.includes(:items, :project).find(params[:checklist_id])
       end
 
       def parse_faraday_error(error)

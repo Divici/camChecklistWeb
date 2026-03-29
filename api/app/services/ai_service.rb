@@ -35,7 +35,25 @@ class AiService
     handle_tool_response(response, "photo")
   end
 
-  # Answer a question about the checklist
+  # Full assistant — answers questions AND performs actions across all projects
+  def assistant_ask(question)
+    all_tools = [
+      answer_question_tool,
+      add_item_tool,
+      edit_item_tool,
+      delete_item_tool,
+      toggle_item_tool,
+      switch_context_tool,
+    ]
+    response = call_claude(
+      messages: [{ role: "user", content: question }],
+      tools: all_tools,
+      system_override: assistant_system_prompt
+    )
+    handle_assistant_response(response)
+  end
+
+  # Legacy ask — just answers questions about current checklist
   def answer_question(question)
     response = call_claude(
       messages: [{ role: "user", content: question }],
@@ -68,6 +86,51 @@ class AiService
     PROMPT
   end
 
+  def assistant_system_prompt
+    current_items_text = @items.map { |item|
+      status = item.completed? ? "[DONE]" : "[TODO]"
+      "  #{status} ID:#{item.id} - #{item.text} (priority: #{item.priority})"
+    }.join("\n")
+
+    # Load all projects and their checklists for cross-project awareness
+    other_context_lines = []
+    Project.includes(checklists: :items).find_each do |project|
+      project.checklists.each do |cl|
+        next if cl.id == @checklist.id
+        items_summary = cl.items.order(:position).map { |item|
+          status = item.completed? ? "[DONE]" : "[TODO]"
+          "    #{status} ID:#{item.id} - #{item.text}"
+        }.join("\n")
+        other_context_lines << "  Project: \"#{project.name}\" (ID:#{project.id}) > Checklist: \"#{cl.name}\" (ID:#{cl.id})\n#{items_summary}"
+      end
+    end
+
+    <<~PROMPT
+      You are CheckVoice, a smart AI assistant for managing checklists.
+      You can answer questions, add items, edit items, delete items, toggle completion, and help users navigate between projects and checklists.
+
+      == CURRENT CONTEXT ==
+      Project: "#{@checklist.project.name}" (ID:#{@checklist.project.id})
+      Checklist: "#{@checklist.name}" (ID:#{@checklist.id})
+      #{@checklist.description.present? ? "Description: #{@checklist.description}" : ""}
+      Items:
+      #{current_items_text}
+
+      == OTHER PROJECTS & CHECKLISTS ==
+      #{other_context_lines.any? ? other_context_lines.join("\n\n") : "(none)"}
+
+      == RULES ==
+      - Always use the answer_question tool to respond to the user, even when performing actions. Combine your answer with any actions.
+      - When the user mentions something that clearly belongs to a DIFFERENT project or checklist, use the switch_context tool to suggest switching. Ask them to confirm first before taking actions on items in other checklists.
+      - When adding items, use sensible defaults (priority: "normal") unless specified.
+      - When toggling items, set completed=true to check off, completed=false to uncheck.
+      - Be helpful and proactive — if the user says "add buy milk to my groceries list" and that list exists in another project, suggest switching first.
+      - You may call multiple tools in one response (e.g. add an item AND answer).
+    PROMPT
+  end
+
+  # ── Tool definitions ──
+
   def check_items_tool
     {
       type: "function",
@@ -98,18 +161,18 @@ class AiService
       type: "function",
       function: {
         name: "answer_question",
-        description: "Answer a question about the user's checklist progress.",
+        description: "Answer the user's question or confirm an action was taken. Always use this tool to respond.",
         parameters: {
           type: "object",
           properties: {
             answer: {
               type: "string",
-              description: "The answer to the user's question"
+              description: "The response to show the user"
             },
             related_item_ids: {
               type: "array",
               items: { type: "integer" },
-              description: "IDs of items relevant to the answer"
+              description: "IDs of items relevant to the answer (from the current checklist)"
             }
           },
           required: ["answer"]
@@ -117,6 +180,99 @@ class AiService
       }
     }
   end
+
+  def add_item_tool
+    {
+      type: "function",
+      function: {
+        name: "add_item",
+        description: "Add a new item to the current checklist.",
+        parameters: {
+          type: "object",
+          properties: {
+            text: { type: "string", description: "The item text" },
+            priority: { type: "string", enum: ["low", "normal", "high"], description: "Priority level (default: normal)" }
+          },
+          required: ["text"]
+        }
+      }
+    }
+  end
+
+  def edit_item_tool
+    {
+      type: "function",
+      function: {
+        name: "edit_item",
+        description: "Edit an existing item's text or priority on the current checklist.",
+        parameters: {
+          type: "object",
+          properties: {
+            item_id: { type: "integer", description: "The ID of the item to edit" },
+            text: { type: "string", description: "New text for the item (omit to keep current)" },
+            priority: { type: "string", enum: ["low", "normal", "high"], description: "New priority (omit to keep current)" }
+          },
+          required: ["item_id"]
+        }
+      }
+    }
+  end
+
+  def delete_item_tool
+    {
+      type: "function",
+      function: {
+        name: "delete_item",
+        description: "Delete an item from the current checklist.",
+        parameters: {
+          type: "object",
+          properties: {
+            item_id: { type: "integer", description: "The ID of the item to delete" }
+          },
+          required: ["item_id"]
+        }
+      }
+    }
+  end
+
+  def toggle_item_tool
+    {
+      type: "function",
+      function: {
+        name: "toggle_item",
+        description: "Mark an item as complete or incomplete on the current checklist.",
+        parameters: {
+          type: "object",
+          properties: {
+            item_id: { type: "integer", description: "The ID of the item to toggle" },
+            completed: { type: "boolean", description: "true to mark complete, false to uncheck" }
+          },
+          required: ["item_id", "completed"]
+        }
+      }
+    }
+  end
+
+  def switch_context_tool
+    {
+      type: "function",
+      function: {
+        name: "switch_context",
+        description: "Suggest switching to a different project and/or checklist when the user references items outside the current context.",
+        parameters: {
+          type: "object",
+          properties: {
+            project_id: { type: "integer", description: "The project ID to switch to" },
+            checklist_id: { type: "integer", description: "The checklist ID to switch to" },
+            reason: { type: "string", description: "Why you're suggesting this switch" }
+          },
+          required: ["project_id", "checklist_id", "reason"]
+        }
+      }
+    }
+  end
+
+  # ── Client & API call ──
 
   def openrouter_client
     @openrouter_client ||= OpenAI::Client.new(
@@ -130,14 +286,14 @@ class AiService
     )
   end
 
-  def call_claude(messages:, tools:)
+  def call_claude(messages:, tools:, system_override: nil)
     start_time = Time.current
     response = openrouter_client.chat(
       parameters: {
         model: CLAUDE_MODEL,
         max_tokens: 1024,
         messages: [
-          { role: "system", content: system_prompt },
+          { role: "system", content: system_override || system_prompt },
           *messages
         ],
         tools: tools,
@@ -159,6 +315,8 @@ class AiService
     response
   end
 
+  # ── Response handlers ──
+
   def handle_tool_response(response, completed_via)
     message = response.dig("choices", 0, "message")
     tool_calls = message&.dig("tool_calls") || []
@@ -170,19 +328,93 @@ class AiService
     item_ids = input["item_ids"] || []
     reasoning = input["reasoning"] || ""
 
-    # Mark items as completed (wrapped in transaction for atomicity)
     checked_items = []
     ActiveRecord::Base.transaction do
       item_ids.each do |id|
         item = @items.find { |i| i.id == id }
         next unless item && !item.completed?
-
         item.update!(completed: true, completed_via: completed_via, completed_at: Time.current)
         checked_items << item
       end
     end
 
     { checked_items: checked_items.map(&:as_json), reasoning: reasoning }
+  end
+
+  def handle_assistant_response(response)
+    message = response.dig("choices", 0, "message")
+    tool_calls = message&.dig("tool_calls") || []
+
+    answer = nil
+    related_items = []
+    actions = []
+    context_switch = nil
+
+    tool_calls.each do |tc|
+      name = tc.dig("function", "name")
+      input = JSON.parse(tc.dig("function", "arguments"))
+
+      case name
+      when "answer_question"
+        answer = input["answer"]
+        related_ids = input["related_item_ids"] || []
+        related_items = @items.select { |i| related_ids.include?(i.id) }
+
+      when "add_item"
+        item = @checklist.items.create!(
+          text: input["text"],
+          priority: input["priority"] || "normal",
+          position: (@items.maximum(:position) || 0) + 1
+        )
+        actions << { type: "added", item: item.as_json }
+
+      when "edit_item"
+        item = @items.find { |i| i.id == input["item_id"] }
+        if item
+          updates = {}
+          updates[:text] = input["text"] if input["text"]
+          updates[:priority] = input["priority"] if input["priority"]
+          item.update!(updates) if updates.any?
+          actions << { type: "edited", item: item.reload.as_json }
+        end
+
+      when "delete_item"
+        item = @items.find { |i| i.id == input["item_id"] }
+        if item
+          actions << { type: "deleted", item: item.as_json }
+          item.destroy!
+        end
+
+      when "toggle_item"
+        item = @items.find { |i| i.id == input["item_id"] }
+        if item
+          completed = input["completed"]
+          item.update!(
+            completed: completed,
+            completed_via: completed ? "assistant" : nil,
+            completed_at: completed ? Time.current : nil
+          )
+          actions << { type: completed ? "completed" : "unchecked", item: item.reload.as_json }
+        end
+
+      when "switch_context"
+        context_switch = {
+          project_id: input["project_id"],
+          checklist_id: input["checklist_id"],
+          reason: input["reason"]
+        }
+      end
+    end
+
+    # Fall back to text content if no answer_question tool was used
+    if answer.nil?
+      answer = message&.dig("content") || "Done."
+    end
+
+    result = { answer: answer, related_items: related_items.map(&:as_json) }
+    result[:actions] = actions if actions.any?
+    result[:context_switch] = context_switch if context_switch
+    result
   end
 
   def handle_answer_response(response)
@@ -197,11 +429,12 @@ class AiService
       related_items = @items.select { |i| related_ids.include?(i.id) }
       { answer: answer, related_items: related_items.map(&:as_json) }
     else
-      # Fall back to text response
       text = message&.dig("content") || "I couldn't process that question."
       { answer: text, related_items: [] }
     end
   end
+
+  # ── Langfuse ──
 
   def langfuse_configured?
     ENV["LANGFUSE_PUBLIC_KEY"].present? && ENV["LANGFUSE_SECRET_KEY"].present?

@@ -15,6 +15,7 @@ Rails.application.routes.draw do
         post :voice, to: "ai#voice"
         post :photo, to: "ai#photo"
         post :ask, to: "ai#ask"
+        post :assistant, to: "ai#assistant"
       end
     end
   end

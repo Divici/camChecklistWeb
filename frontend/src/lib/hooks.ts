@@ -292,6 +292,40 @@ export function usePhotoCheck(checklistId: number | string, projectId?: number |
   });
 }
 
+export interface AssistantAction {
+  type: "added" | "edited" | "deleted" | "completed" | "unchecked";
+  item: Item;
+}
+
+export interface ContextSwitch {
+  project_id: number;
+  checklist_id: number;
+  reason: string;
+}
+
+export interface AssistantResponse {
+  answer: string;
+  related_items: Item[];
+  actions?: AssistantAction[];
+  context_switch?: ContextSwitch;
+}
+
+export function useAssistant(checklistId: number | string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (question: string) => {
+      return apiFetch<AssistantResponse>(
+        `/checklists/${checklistId}/assistant`,
+        { method: "POST", body: JSON.stringify({ question }) }
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["checklists", checklistId, "items"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+}
+
 export function useAskQuestion(checklistId: number | string) {
   return useMutation({
     mutationFn: async (question: string) => {
