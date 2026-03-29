@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CheckVoice",
+  title: "CamChecklist",
   description:
     "Voice-powered checklist management — create, manage, and complete checklists using your voice.",
 };

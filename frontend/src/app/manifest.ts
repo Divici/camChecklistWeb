@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "CheckVoice",
-    short_name: "CheckVoice",
+    name: "CamChecklist",
+    short_name: "CamChecklist",
     description: "Voice-powered checklist management",
     start_url: "/projects",
     display: "standalone",

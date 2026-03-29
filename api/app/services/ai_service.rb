@@ -72,7 +72,7 @@ class AiService
     }.join("\n")
 
     <<~PROMPT
-      You are CheckVoice, an AI assistant that helps users manage checklists via voice.
+      You are CamChecklist, an AI assistant that helps users manage checklists via voice.
 
       Current checklist: #{@checklist.name}
       #{@checklist.description.present? ? "Description: #{@checklist.description}" : ""}
@@ -97,7 +97,7 @@ class AiService
     }.join("\n")
 
     <<~PROMPT
-      You are CheckVoice, an AI assistant that helps users manage checklists.
+      You are CamChecklist, an AI assistant that helps users manage checklists.
       You have access to tools to check off items and answer questions.
 
       Current checklist: #{@checklist.name}
@@ -132,7 +132,7 @@ class AiService
     end
 
     <<~PROMPT
-      You are CheckVoice, a smart AI assistant for managing checklists.
+      You are CamChecklist, a smart AI assistant for managing checklists.
       You can answer questions, add items, edit items, delete items, toggle completion, and help users navigate between projects and checklists.
 
       == CURRENT CONTEXT ==
@@ -334,7 +334,7 @@ class AiService
       log_errors: true,
       extra_headers: {
         "HTTP-Referer" => ENV.fetch("FRONTEND_URL", "http://localhost:3000"),
-        "X-Title" => "CheckVoice"
+        "X-Title" => "CamChecklist"
       }
     )
   end
