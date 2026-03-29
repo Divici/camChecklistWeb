@@ -34,7 +34,7 @@ bundle exec rails db:create db:migrate db:seed
 
 Create `api/.env`:
 ```
-ANTHROPIC_API_KEY=sk-ant-...
+OPENROUTER_API_KEY=sk-or-...
 FRONTEND_URL=http://localhost:3000
 ```
 
@@ -70,7 +70,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Variable | Description | Required |
 |----------|------------|----------|
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude AI | Yes |
+| `OPENROUTER_API_KEY` | OpenRouter API key for Claude AI | Yes |
 | `FRONTEND_URL` | Frontend URL for CORS (default: http://localhost:3000) | No |
 | `NEXT_PUBLIC_API_URL` | Backend API URL (default: http://localhost:3001) | No |
 | `LANGFUSE_PUBLIC_KEY` | Langfuse public key for observability | No |
@@ -136,7 +136,7 @@ npm run build  # Type-check + build verification
 1. Create a new Railway service from the repo
 2. Set the root directory to `api/`
 3. Add PostgreSQL plugin
-4. Set environment variables: `ANTHROPIC_API_KEY`, `FRONTEND_URL`, `LANGFUSE_*`
+4. Set environment variables: `OPENROUTER_API_KEY`, `FRONTEND_URL`, `LANGFUSE_*`
 5. Railway will auto-detect the Dockerfile and deploy
 
 ## License

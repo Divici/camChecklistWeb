@@ -5,41 +5,40 @@ RSpec.describe "Api::V1::Ai", type: :request do
   let!(:item1) { create(:item, checklist: checklist, text: "Wash Car", position: 1) }
   let!(:item2) { create(:item, checklist: checklist, text: "Buy Groceries", position: 2) }
 
-  let(:mock_client) { instance_double(Anthropic::Client) }
-  let(:mock_messages) { instance_double(Anthropic::Resources::Messages) }
+  let(:mock_client) { instance_double(OpenAI::Client) }
 
   before do
-    allow(Anthropic::Client).to receive(:new).and_return(mock_client)
-    allow(mock_client).to receive(:messages).and_return(mock_messages)
+    allow(OpenAI::Client).to receive(:new).and_return(mock_client)
   end
 
-  def build_tool_use_block(name:, input:)
-    block = double("ToolUseBlock")
-    allow(block).to receive(:type).and_return(:tool_use)
-    allow(block).to receive(:name).and_return(name)
-    allow(block).to receive(:input).and_return(input)
-    block
+  def build_tool_call(name:, arguments:)
+    {
+      "id" => "call_#{SecureRandom.hex(4)}",
+      "type" => "function",
+      "function" => {
+        "name" => name,
+        "arguments" => arguments.to_json
+      }
+    }
   end
 
-  def build_text_block(text:)
-    block = double("TextBlock")
-    allow(block).to receive(:type).and_return(:text)
-    allow(block).to receive(:text).and_return(text)
-    block
-  end
-
-  def build_response(content_blocks:)
-    usage = double("Usage", input_tokens: 100, output_tokens: 50)
-    double("Response", content: content_blocks, usage: usage)
+  def build_response(tool_calls: nil, content: nil)
+    message = { "role" => "assistant" }
+    message["tool_calls"] = tool_calls if tool_calls
+    message["content"] = content if content
+    {
+      "choices" => [{ "message" => message }],
+      "usage" => { "prompt_tokens" => 100, "completion_tokens" => 50 }
+    }
   end
 
   describe "POST /api/v1/checklists/:checklist_id/voice" do
     it "processes a voice transcript and returns checked items" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [item1.id], "reasoning" => "User washed their car" }
+        arguments: { "item_ids" => [item1.id], "reasoning" => "User washed their car" }
       )
-      allow(mock_messages).to receive(:create).and_return(build_response(content_blocks: [tool_block]))
+      allow(mock_client).to receive(:chat).and_return(build_response(tool_calls: [tool_call]))
 
       post "/api/v1/checklists/#{checklist.id}/voice", params: { transcript: "I just washed the car" }
 
@@ -66,11 +65,11 @@ RSpec.describe "Api::V1::Ai", type: :request do
 
   describe "POST /api/v1/checklists/:checklist_id/photo" do
     it "processes a photo and returns checked items" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [item1.id], "reasoning" => "Photo shows a clean car" }
+        arguments: { "item_ids" => [item1.id], "reasoning" => "Photo shows a clean car" }
       )
-      allow(mock_messages).to receive(:create).and_return(build_response(content_blocks: [tool_block]))
+      allow(mock_client).to receive(:chat).and_return(build_response(tool_calls: [tool_call]))
 
       image = Rack::Test::UploadedFile.new(
         StringIO.new("fake image data"),
@@ -97,11 +96,11 @@ RSpec.describe "Api::V1::Ai", type: :request do
 
   describe "POST /api/v1/checklists/:checklist_id/ask" do
     it "answers a question about the checklist" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "answer_question",
-        input: { "answer" => "You have 2 items remaining.", "related_item_ids" => [item1.id, item2.id] }
+        arguments: { "answer" => "You have 2 items remaining.", "related_item_ids" => [item1.id, item2.id] }
       )
-      allow(mock_messages).to receive(:create).and_return(build_response(content_blocks: [tool_block]))
+      allow(mock_client).to receive(:chat).and_return(build_response(tool_calls: [tool_call]))
 
       post "/api/v1/checklists/#{checklist.id}/ask", params: { question: "How many items left?" }
 

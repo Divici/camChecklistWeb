@@ -29,8 +29,8 @@ gem "thruster", require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
-# Anthropic Claude AI SDK
-gem "anthropic"
+# OpenRouter AI (OpenAI-compatible API for Claude and other models)
+gem "ruby-openai"
 
 # Langfuse observability
 gem "langfuse"

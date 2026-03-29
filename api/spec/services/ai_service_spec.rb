@@ -7,42 +7,41 @@ RSpec.describe AiService, type: :service do
   let!(:item3) { create(:item, checklist: checklist, text: "Walk Dog", position: 3, completed: true, completed_via: "manual") }
 
   let(:service) { described_class.new(checklist) }
-  let(:mock_client) { instance_double(Anthropic::Client) }
-  let(:mock_messages) { instance_double(Anthropic::Resources::Messages) }
+  let(:mock_client) { instance_double(OpenAI::Client) }
 
   before do
-    allow(Anthropic::Client).to receive(:new).and_return(mock_client)
-    allow(mock_client).to receive(:messages).and_return(mock_messages)
+    allow(OpenAI::Client).to receive(:new).and_return(mock_client)
   end
 
-  def build_tool_use_block(name:, input:)
-    block = double("ToolUseBlock")
-    allow(block).to receive(:type).and_return(:tool_use)
-    allow(block).to receive(:name).and_return(name)
-    allow(block).to receive(:input).and_return(input)
-    block
+  def build_tool_call(name:, arguments:)
+    {
+      "id" => "call_#{SecureRandom.hex(4)}",
+      "type" => "function",
+      "function" => {
+        "name" => name,
+        "arguments" => arguments.to_json
+      }
+    }
   end
 
-  def build_text_block(text:)
-    block = double("TextBlock")
-    allow(block).to receive(:type).and_return(:text)
-    allow(block).to receive(:text).and_return(text)
-    block
-  end
-
-  def build_response(content_blocks:, input_tokens: 100, output_tokens: 50)
-    usage = double("Usage", input_tokens: input_tokens, output_tokens: output_tokens)
-    double("Response", content: content_blocks, usage: usage)
+  def build_response(tool_calls: nil, content: nil)
+    message = { "role" => "assistant" }
+    message["tool_calls"] = tool_calls if tool_calls
+    message["content"] = content if content
+    {
+      "choices" => [{ "message" => message }],
+      "usage" => { "prompt_tokens" => 100, "completion_tokens" => 50 }
+    }
   end
 
   describe "#process_voice" do
     it "marks matched items as complete via voice" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [item1.id], "reasoning" => "User mentioned washing their car" }
+        arguments: { "item_ids" => [item1.id], "reasoning" => "User mentioned washing their car" }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.process_voice("I just washed the car")
 
@@ -57,12 +56,12 @@ RSpec.describe AiService, type: :service do
     end
 
     it "marks multiple items as complete" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [item1.id, item2.id], "reasoning" => "User did both tasks" }
+        arguments: { "item_ids" => [item1.id, item2.id], "reasoning" => "User did both tasks" }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.process_voice("I washed the car and bought groceries")
 
@@ -72,12 +71,12 @@ RSpec.describe AiService, type: :service do
     end
 
     it "skips already completed items" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [item3.id], "reasoning" => "User mentioned walking the dog" }
+        arguments: { "item_ids" => [item3.id], "reasoning" => "User mentioned walking the dog" }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.process_voice("I walked the dog")
 
@@ -85,12 +84,12 @@ RSpec.describe AiService, type: :service do
     end
 
     it "returns empty when Claude finds no matches" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [], "reasoning" => "Nothing matched" }
+        arguments: { "item_ids" => [], "reasoning" => "Nothing matched" }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.process_voice("I played video games")
 
@@ -99,9 +98,8 @@ RSpec.describe AiService, type: :service do
     end
 
     it "returns no-match when Claude does not use the tool" do
-      text_block = build_text_block(text: "I'm not sure what you mean.")
-      response = build_response(content_blocks: [text_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(content: "I'm not sure what you mean.")
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.process_voice("")
 
@@ -112,12 +110,12 @@ RSpec.describe AiService, type: :service do
 
   describe "#process_photo" do
     it "marks items as complete via photo" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [item1.id], "reasoning" => "Photo shows a clean car" }
+        arguments: { "item_ids" => [item1.id], "reasoning" => "Photo shows a clean car" }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.process_photo("base64encodedimage", "image/jpeg")
 
@@ -130,12 +128,12 @@ RSpec.describe AiService, type: :service do
     end
 
     it "returns no-match when Claude finds nothing in the photo" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [], "reasoning" => "Cannot identify any completed tasks" }
+        arguments: { "item_ids" => [], "reasoning" => "Cannot identify any completed tasks" }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.process_photo("base64encodedimage", "image/png")
 
@@ -145,12 +143,12 @@ RSpec.describe AiService, type: :service do
 
   describe "#answer_question" do
     it "returns an answer with related items via tool use" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "answer_question",
-        input: { "answer" => "You have 2 items remaining.", "related_item_ids" => [item1.id, item2.id] }
+        arguments: { "answer" => "You have 2 items remaining.", "related_item_ids" => [item1.id, item2.id] }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.answer_question("How many items are left?")
 
@@ -159,12 +157,12 @@ RSpec.describe AiService, type: :service do
     end
 
     it "returns an answer without related items" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "answer_question",
-        input: { "answer" => "Your checklist is about errands." }
+        arguments: { "answer" => "Your checklist is about errands." }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.answer_question("What is this checklist about?")
 
@@ -173,9 +171,8 @@ RSpec.describe AiService, type: :service do
     end
 
     it "falls back to text response when no tool is used" do
-      text_block = build_text_block(text: "Here is your checklist status.")
-      response = build_response(content_blocks: [text_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(content: "Here is your checklist status.")
+      allow(mock_client).to receive(:chat).and_return(response)
 
       result = service.answer_question("What's happening?")
 
@@ -186,17 +183,18 @@ RSpec.describe AiService, type: :service do
 
   describe "Langfuse integration" do
     it "logs to Langfuse when configured" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [], "reasoning" => "No match" }
+        arguments: { "item_ids" => [], "reasoning" => "No match" }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("LANGFUSE_PUBLIC_KEY").and_return("pk-test")
       allow(ENV).to receive(:[]).with("LANGFUSE_SECRET_KEY").and_return("sk-test")
       allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("OPENROUTER_API_KEY").and_return("sk-or-test")
       allow(ENV).to receive(:fetch).with("LANGFUSE_HOST", "https://cloud.langfuse.com").and_return("https://cloud.langfuse.com")
 
       mock_trace = double("LangfuseTrace", id: "trace-123")
@@ -213,12 +211,12 @@ RSpec.describe AiService, type: :service do
     end
 
     it "does not log to Langfuse when not configured" do
-      tool_block = build_tool_use_block(
+      tool_call = build_tool_call(
         name: "check_items",
-        input: { "item_ids" => [], "reasoning" => "No match" }
+        arguments: { "item_ids" => [], "reasoning" => "No match" }
       )
-      response = build_response(content_blocks: [tool_block])
-      allow(mock_messages).to receive(:create).and_return(response)
+      response = build_response(tool_calls: [tool_call])
+      allow(mock_client).to receive(:chat).and_return(response)
 
       allow(Langfuse).to receive(:trace)
 
