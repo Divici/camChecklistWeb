@@ -259,7 +259,7 @@ export function useVoiceCheck(checklistId: number | string, projectId?: number |
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (transcript: string) => {
-      return apiFetch<{ checked_items: Item[]; reasoning: string }>(
+      return apiFetch<{ checked_items: Item[]; deleted_items?: Item[]; reasoning: string }>(
         `/checklists/${checklistId}/voice`,
         { method: "POST", body: JSON.stringify({ transcript }) }
       );
