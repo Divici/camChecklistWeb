@@ -9,9 +9,7 @@ import {
   Pencil,
   Camera,
   Mic,
-  Video,
   X,
-  Upload,
   Loader2,
   Send,
   Plus,
@@ -29,7 +27,6 @@ import {
   usePhotoCheck,
 } from "@/lib/hooks";
 import { useVoiceRecognition } from "@/hooks/use-voice-recognition";
-import { useCamera } from "@/hooks/use-camera";
 import { resizeImage } from "@/lib/image-utils";
 import { ConfirmationToast } from "@/components/confirmation-toast";
 import { PageSpinner } from "@/components/page-spinner";
@@ -50,7 +47,6 @@ export default function ChecklistPage() {
   const photoCheck = usePhotoCheck(id, projectId);
 
   // UI state
-  const [showCamera, setShowCamera] = useState(false);
   const [textFallback, setTextFallback] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -86,17 +82,6 @@ export default function ChecklistPage() {
     },
   });
 
-  // Camera
-  const {
-    isCapturing,
-    preview,
-    videoRef,
-    startCamera,
-    capturePhoto,
-    stopCamera,
-    handleFileUpload,
-  } = useCamera();
-
   const handleMicPress = useCallback(() => {
     if (isListening) {
       stopListening();
@@ -122,39 +107,10 @@ export default function ChecklistPage() {
     });
   }, [textFallback, voiceCheck]);
 
-  const handleCameraOpen = useCallback(() => {
-    setShowCamera(true);
-    startCamera();
-  }, [startCamera]);
-
-  const handleCameraClose = useCallback(() => {
-    stopCamera();
-    setShowCamera(false);
-  }, [stopCamera]);
-
-  const handleCapture = useCallback(async () => {
-    const file = await capturePhoto();
-    if (!file) return;
-    stopCamera();
-    setShowCamera(false);
-    photoCheck.mutate(file, {
-      onSuccess: (data) => {
-        const names = data.checked_items.map((i) => i.text).join(", ");
-        setToastMessage(names ? `Photo checked: ${names}` : data.reasoning);
-        setTimeout(() => setToastMessage(null), 4000);
-      },
-      onError: (err) => {
-        setErrorMessage(err instanceof Error ? err.message : "Photo check failed. Try again.");
-        setTimeout(() => setErrorMessage(null), 4000);
-      },
-    });
-  }, [capturePhoto, stopCamera, photoCheck]);
-
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      handleFileUpload(file);
       const resized = await resizeImage(file);
       photoCheck.mutate(resized, {
         onSuccess: (data) => {
@@ -168,7 +124,7 @@ export default function ChecklistPage() {
         },
       });
     },
-    [handleFileUpload, photoCheck]
+    [photoCheck]
   );
 
   function handleToggle(item: Item) {
@@ -197,11 +153,11 @@ export default function ChecklistPage() {
   const deletingItemId = deleteItem.isPending ? deleteItem.variables : null;
   const togglingItemId = toggleItem.isPending ? toggleItem.variables?.itemId : null;
 
-  // Sort: completed first, then by position
+  // Sort: uncompleted first by position, then completed at bottom
   const sortedItems = items
     ? [...items].sort((a, b) => {
-        if (a.completed && !b.completed) return -1;
-        if (!a.completed && b.completed) return 1;
+        if (a.completed && !b.completed) return 1;
+        if (!a.completed && b.completed) return -1;
         return a.position - b.position;
       })
     : [];
@@ -557,48 +513,6 @@ export default function ChecklistPage() {
         </div>
       )}
 
-      {/* Camera Capture Modal */}
-      {showCamera && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center p-6">
-          <div className="w-full max-w-lg bg-surface rounded-3xl overflow-hidden">
-            <div className="flex items-center justify-between p-4">
-              <h3 className="font-headline font-bold text-on-surface">
-                Capture Photo
-              </h3>
-              <button
-                onClick={handleCameraClose}
-                className="p-2 rounded-full hover:bg-surface-container-high"
-              >
-                <X className="w-5 h-5 text-on-surface" />
-              </button>
-            </div>
-            <div className="relative aspect-[4/3] bg-black">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex items-center justify-center gap-4 p-6">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-3 rounded-full bg-surface-container-high text-on-surface-variant"
-              >
-                <Upload className="w-6 h-6" />
-              </button>
-              <button
-                onClick={handleCapture}
-                className="w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-xl"
-              >
-                <Camera className="w-8 h-8" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -610,10 +524,10 @@ export default function ChecklistPage() {
 
       {/* Voice/Camera HUD */}
       <div className="fixed bottom-24 left-0 w-full px-6 flex justify-center items-end pointer-events-none z-30">
-        <div className="bg-surface-variant/60 backdrop-blur-xl p-6 rounded-[2.5rem] w-full max-w-md flex items-center justify-between pointer-events-auto shadow-2xl">
-          {/* Camera Button */}
+        <div className="bg-surface-variant/60 backdrop-blur-xl p-6 rounded-[2.5rem] flex items-center justify-center gap-8 pointer-events-auto shadow-2xl">
+          {/* Camera / Photo Button */}
           <button
-            onClick={handleCameraOpen}
+            onClick={() => fileInputRef.current?.click()}
             disabled={isAiProcessing}
             className="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors disabled:opacity-50"
           >
@@ -651,15 +565,6 @@ export default function ChecklistPage() {
               </div>
             )}
           </div>
-
-          {/* Video / Upload Button */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isAiProcessing}
-            className="w-14 h-14 rounded-2xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors disabled:opacity-50"
-          >
-            <Video className="w-6 h-6" />
-          </button>
         </div>
       </div>
     </div>
