@@ -458,29 +458,31 @@ export default function ChecklistPage() {
 
         {/* Add Item Button & Form */}
         {showAddItem ? (
-          <div className="bg-surface-container-low rounded-2xl p-5 flex items-center gap-3">
+          <div className="bg-surface-container-low rounded-2xl p-5 space-y-3">
             <input
               type="text"
               value={newItemText}
               onChange={(e) => setNewItemText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreateItem()}
               placeholder="New item text..."
-              className="flex-1 bg-surface-container px-4 py-2.5 rounded-xl text-on-surface font-body outline-none ring-1 ring-primary/30 focus:ring-primary"
+              className="w-full bg-surface-container px-4 py-2.5 rounded-xl text-on-surface font-body outline-none ring-1 ring-primary/30 focus:ring-primary"
               autoFocus
             />
-            <button
-              onClick={handleCreateItem}
-              disabled={!newItemText.trim() || createItem.isPending}
-              className="px-4 py-2.5 rounded-xl bg-primary text-on-primary font-headline font-semibold text-sm disabled:opacity-50"
-            >
-              Create
-            </button>
-            <button
-              onClick={() => { setShowAddItem(false); setNewItemText(""); }}
-              className="px-4 py-2.5 rounded-xl bg-surface-container-high text-on-surface-variant font-headline font-semibold text-sm"
-            >
-              Cancel
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleCreateItem}
+                disabled={!newItemText.trim() || createItem.isPending}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-on-primary font-headline font-semibold text-sm disabled:opacity-50"
+              >
+                Create
+              </button>
+              <button
+                onClick={() => { setShowAddItem(false); setNewItemText(""); }}
+                className="flex-1 py-2.5 rounded-xl bg-surface-container-high text-on-surface-variant font-headline font-semibold text-sm"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         ) : (
           <button

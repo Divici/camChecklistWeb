@@ -461,7 +461,7 @@ class AiService
         actions << { type: "added", item: item.as_json }
 
       when "edit_item"
-        item = @items.find { |i| i.id == input["item_id"] }
+        item = find_user_item(input["item_id"])
         if item
           updates = {}
           updates[:text] = input["text"] if input["text"]
@@ -471,14 +471,14 @@ class AiService
         end
 
       when "delete_item"
-        item = @items.find { |i| i.id == input["item_id"] }
+        item = find_user_item(input["item_id"])
         if item
           actions << { type: "deleted", item: item.as_json }
           item.destroy!
         end
 
       when "toggle_item"
-        item = @items.find { |i| i.id == input["item_id"] }
+        item = find_user_item(input["item_id"])
         if item
           completed = input["completed"]
           item.update!(
@@ -527,6 +527,19 @@ class AiService
   end
 
   # ── Langfuse ──
+
+  # Find an item across all the user's checklists (not just the current one)
+  def find_user_item(item_id)
+    return nil unless item_id
+    # First check current checklist's items (fast path)
+    item = @items.find { |i| i.id == item_id }
+    return item if item
+
+    # Search across all user's items
+    user = @checklist.project.user
+    return nil unless user
+    Item.joins(checklist: :project).where(projects: { user_id: user.id }).find_by(id: item_id)
+  end
 
   def langfuse_configured?
     ENV["LANGFUSE_PUBLIC_KEY"].present? && ENV["LANGFUSE_SECRET_KEY"].present?
