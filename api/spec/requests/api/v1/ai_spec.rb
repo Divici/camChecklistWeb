@@ -1,7 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe "Api::V1::Ai", type: :request do
-  let(:checklist) { create(:checklist) }
+  include_context "authenticated"
+
+  let(:project) { create(:project, user: current_user) }
+  let(:checklist) { create(:checklist, project: project) }
   let!(:item1) { create(:item, checklist: checklist, text: "Wash Car", position: 1) }
   let!(:item2) { create(:item, checklist: checklist, text: "Buy Groceries", position: 2) }
 
@@ -9,27 +12,6 @@ RSpec.describe "Api::V1::Ai", type: :request do
 
   before do
     allow(OpenAI::Client).to receive(:new).and_return(mock_client)
-  end
-
-  def build_tool_call(name:, arguments:)
-    {
-      "id" => "call_#{SecureRandom.hex(4)}",
-      "type" => "function",
-      "function" => {
-        "name" => name,
-        "arguments" => arguments.to_json
-      }
-    }
-  end
-
-  def build_response(tool_calls: nil, content: nil)
-    message = { "role" => "assistant" }
-    message["tool_calls"] = tool_calls if tool_calls
-    message["content"] = content if content
-    {
-      "choices" => [{ "message" => message }],
-      "usage" => { "prompt_tokens" => 100, "completion_tokens" => 50 }
-    }
   end
 
   describe "POST /api/v1/checklists/:checklist_id/voice" do
@@ -40,7 +22,9 @@ RSpec.describe "Api::V1::Ai", type: :request do
       )
       allow(mock_client).to receive(:chat).and_return(build_response(tool_calls: [tool_call]))
 
-      post "/api/v1/checklists/#{checklist.id}/voice", params: { transcript: "I just washed the car" }
+      post "/api/v1/checklists/#{checklist.id}/voice",
+           params: { transcript: "I just washed the car" },
+           headers: auth_headers
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -49,7 +33,7 @@ RSpec.describe "Api::V1::Ai", type: :request do
     end
 
     it "returns unprocessable_entity when transcript is missing" do
-      post "/api/v1/checklists/#{checklist.id}/voice", params: {}
+      post "/api/v1/checklists/#{checklist.id}/voice", params: {}, headers: auth_headers
 
       expect(response).to have_http_status(:unprocessable_entity)
       json = JSON.parse(response.body)
@@ -57,9 +41,16 @@ RSpec.describe "Api::V1::Ai", type: :request do
     end
 
     it "returns 404 for an invalid checklist id" do
-      post "/api/v1/checklists/999999/voice", params: { transcript: "test" }
+      post "/api/v1/checklists/999999/voice",
+           params: { transcript: "test" },
+           headers: auth_headers
 
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "returns 401 without auth headers" do
+      post "/api/v1/checklists/#{checklist.id}/voice", params: { transcript: "test" }
+      expect(response).to have_http_status(:unauthorized)
     end
   end
 
@@ -77,7 +68,9 @@ RSpec.describe "Api::V1::Ai", type: :request do
         original_filename: "photo.jpg"
       )
 
-      post "/api/v1/checklists/#{checklist.id}/photo", params: { image: image }
+      post "/api/v1/checklists/#{checklist.id}/photo",
+           params: { image: image },
+           headers: auth_headers
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -86,7 +79,7 @@ RSpec.describe "Api::V1::Ai", type: :request do
     end
 
     it "returns unprocessable_entity when image is missing" do
-      post "/api/v1/checklists/#{checklist.id}/photo", params: {}
+      post "/api/v1/checklists/#{checklist.id}/photo", params: {}, headers: auth_headers
 
       expect(response).to have_http_status(:unprocessable_entity)
       json = JSON.parse(response.body)
@@ -102,7 +95,9 @@ RSpec.describe "Api::V1::Ai", type: :request do
       )
       allow(mock_client).to receive(:chat).and_return(build_response(tool_calls: [tool_call]))
 
-      post "/api/v1/checklists/#{checklist.id}/ask", params: { question: "How many items left?" }
+      post "/api/v1/checklists/#{checklist.id}/ask",
+           params: { question: "How many items left?" },
+           headers: auth_headers
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -111,7 +106,7 @@ RSpec.describe "Api::V1::Ai", type: :request do
     end
 
     it "returns unprocessable_entity when question is missing" do
-      post "/api/v1/checklists/#{checklist.id}/ask", params: {}
+      post "/api/v1/checklists/#{checklist.id}/ask", params: {}, headers: auth_headers
 
       expect(response).to have_http_status(:unprocessable_entity)
       json = JSON.parse(response.body)
@@ -119,7 +114,9 @@ RSpec.describe "Api::V1::Ai", type: :request do
     end
 
     it "returns 404 for an invalid checklist id" do
-      post "/api/v1/checklists/999999/ask", params: { question: "test" }
+      post "/api/v1/checklists/999999/ask",
+           params: { question: "test" },
+           headers: auth_headers
 
       expect(response).to have_http_status(:not_found)
     end

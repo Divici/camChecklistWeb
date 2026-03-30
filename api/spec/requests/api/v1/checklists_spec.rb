@@ -1,14 +1,16 @@
 require 'rails_helper'
 
 RSpec.describe "Api::V1::Checklists", type: :request do
-  let(:project) { create(:project) }
+  include_context "authenticated"
+
+  let(:project) { create(:project, user: current_user) }
 
   describe "GET /api/v1/projects/:project_id/checklists" do
     it "returns all checklists for a project" do
       create_list(:checklist, 3, project: project)
-      create(:checklist) # different project
+      create(:checklist) # different project/user
 
-      get "/api/v1/projects/#{project.id}/checklists"
+      get "/api/v1/projects/#{project.id}/checklists", headers: auth_headers
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -20,7 +22,7 @@ RSpec.describe "Api::V1::Checklists", type: :request do
       create(:item, checklist: checklist, completed: true)
       create(:item, checklist: checklist, completed: false)
 
-      get "/api/v1/projects/#{project.id}/checklists"
+      get "/api/v1/projects/#{project.id}/checklists", headers: auth_headers
 
       json = JSON.parse(response.body)
       expect(json.first).to include(
@@ -29,12 +31,17 @@ RSpec.describe "Api::V1::Checklists", type: :request do
         "progress_percentage" => 50.0
       )
     end
+
+    it "returns 401 without auth headers" do
+      get "/api/v1/projects/#{project.id}/checklists"
+      expect(response).to have_http_status(:unauthorized)
+    end
   end
 
   describe "GET /api/v1/projects/:project_id/checklists/:id" do
     it "returns the checklist" do
       checklist = create(:checklist, project: project, name: "My Checklist")
-      get "/api/v1/projects/#{project.id}/checklists/#{checklist.id}"
+      get "/api/v1/projects/#{project.id}/checklists/#{checklist.id}", headers: auth_headers
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -42,7 +49,7 @@ RSpec.describe "Api::V1::Checklists", type: :request do
     end
 
     it "returns 404 for non-existent checklist" do
-      get "/api/v1/projects/#{project.id}/checklists/999"
+      get "/api/v1/projects/#{project.id}/checklists/999", headers: auth_headers
       expect(response).to have_http_status(:not_found)
     end
   end
@@ -50,7 +57,8 @@ RSpec.describe "Api::V1::Checklists", type: :request do
   describe "POST /api/v1/projects/:project_id/checklists" do
     it "creates a checklist" do
       post "/api/v1/projects/#{project.id}/checklists",
-           params: { checklist: { name: "New Checklist", description: "Desc", icon: "star" } }
+           params: { checklist: { name: "New Checklist", description: "Desc", icon: "star" } },
+           headers: auth_headers
 
       expect(response).to have_http_status(:created)
       json = JSON.parse(response.body)
@@ -60,7 +68,8 @@ RSpec.describe "Api::V1::Checklists", type: :request do
 
     it "returns errors with invalid params" do
       post "/api/v1/projects/#{project.id}/checklists",
-           params: { checklist: { name: "" } }
+           params: { checklist: { name: "" } },
+           headers: auth_headers
 
       expect(response).to have_http_status(:unprocessable_entity)
       json = JSON.parse(response.body)
@@ -72,7 +81,8 @@ RSpec.describe "Api::V1::Checklists", type: :request do
     it "updates the checklist" do
       checklist = create(:checklist, project: project)
       patch "/api/v1/projects/#{project.id}/checklists/#{checklist.id}",
-            params: { checklist: { name: "Updated" } }
+            params: { checklist: { name: "Updated" } },
+            headers: auth_headers
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -84,7 +94,7 @@ RSpec.describe "Api::V1::Checklists", type: :request do
     it "deletes the checklist" do
       checklist = create(:checklist, project: project)
       expect {
-        delete "/api/v1/projects/#{project.id}/checklists/#{checklist.id}"
+        delete "/api/v1/projects/#{project.id}/checklists/#{checklist.id}", headers: auth_headers
       }.to change(Checklist, :count).by(-1)
       expect(response).to have_http_status(:no_content)
     end

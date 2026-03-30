@@ -13,27 +13,6 @@ RSpec.describe AiService, type: :service do
     allow(OpenAI::Client).to receive(:new).and_return(mock_client)
   end
 
-  def build_tool_call(name:, arguments:)
-    {
-      "id" => "call_#{SecureRandom.hex(4)}",
-      "type" => "function",
-      "function" => {
-        "name" => name,
-        "arguments" => arguments.to_json
-      }
-    }
-  end
-
-  def build_response(tool_calls: nil, content: nil)
-    message = { "role" => "assistant" }
-    message["tool_calls"] = tool_calls if tool_calls
-    message["content"] = content if content
-    {
-      "choices" => [{ "message" => message }],
-      "usage" => { "prompt_tokens" => 100, "completion_tokens" => 50 }
-    }
-  end
-
   describe "#process_voice" do
     it "marks matched items as complete via voice" do
       tool_call = build_tool_call(
