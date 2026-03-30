@@ -38,6 +38,9 @@ end
 RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
 
+  # Exclude slow AI eval tests from default runs (run with: bundle exec rspec --tag eval)
+  config.filter_run_excluding eval: true
+
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_paths = [
     Rails.root.join('spec/fixtures')
