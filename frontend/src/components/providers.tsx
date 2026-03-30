@@ -6,7 +6,9 @@ import { useState } from "react";
 import { AuthProvider } from "@/lib/auth";
 import { AuthGuard } from "@/components/auth-guard";
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+  "281606207590-vrtdou1tl9j93vk9fpotrtb1dp8ubm3a.apps.googleusercontent.com";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
