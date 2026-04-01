@@ -7,6 +7,11 @@ PRESEARCH.md
 WORKFLOW_STATE.md
 decision-log.md
 
+# Build study docs (personal reference)
+TECH_STACK.md
+SYSTEM_DESIGN.md
+DEMO_SCRIPT.md
+
 # Environment
 .env
 .env.local
@@ -17,6 +22,9 @@ api/tmp/
 api/log/
 api/db/*.sqlite3
 api/db/*.sqlite3-*
+
+# Build summary (personal reference)
+BUILD_SUMMARY.html
 
 # OS files
 .DS_Store
