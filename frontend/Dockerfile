@@ -16,6 +16,9 @@ COPY . .
 # NEXT_PUBLIC_ vars are baked in at build time — pass via Docker build arg
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+# BACKEND_URL is used by Next.js rewrites to proxy /api/* to the backend
+ARG BACKEND_URL
+ENV BACKEND_URL=${BACKEND_URL}
 RUN npm run build
 
 # Production image

@@ -5,6 +5,9 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   test: {
+    env: {
+      NEXT_PUBLIC_API_URL: "http://localhost:3001",
+    },
     environment: "happy-dom",
     globals: true,
     setupFiles: ["./vitest.setup.tsx"],
