@@ -143,10 +143,44 @@ describe("useAuth", () => {
     );
   });
 
-  it("sets user to null on mount when /auth/me returns 401", async () => {
+  it("refreshes token and retries /auth/me on 401", async () => {
+    let meCallCount = 0;
+    let refreshCalled = false;
+    server.use(
+      http.get(`${API}/auth/me`, () => {
+        meCallCount++;
+        if (meCallCount === 1) {
+          return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        return HttpResponse.json({
+          user: { id: 1, email: "restored@example.com", name: "Restored", avatar_url: null, provider: "google" },
+        });
+      }),
+      http.post(`${API}/auth/refresh`, () => {
+        refreshCalled = true;
+        return HttpResponse.json({ user: { id: 1 } });
+      })
+    );
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(refreshCalled).toBe(true);
+    expect(result.current.user).toEqual(
+      expect.objectContaining({ email: "restored@example.com" })
+    );
+  });
+
+  it("sets user to null when /auth/me returns 401 and refresh also fails", async () => {
     server.use(
       http.get(`${API}/auth/me`, () => {
         return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }),
+      http.post(`${API}/auth/refresh`, () => {
+        return HttpResponse.json({ error: "Invalid" }, { status: 401 });
       })
     );
 

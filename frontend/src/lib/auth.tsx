@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { API_BASE } from "./api";
+import { API_BASE, refreshAccessToken } from "./api";
 import type { User } from "./types";
 
 interface AuthContextType {
@@ -76,9 +76,19 @@ export function useAuth() {
 
 async function fetchMe(): Promise<User | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
+    let res = await fetch(`${API_BASE}/api/v1/auth/me`, {
       credentials: "include",
     });
+
+    if (res.status === 401) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        res = await fetch(`${API_BASE}/api/v1/auth/me`, {
+          credentials: "include",
+        });
+      }
+    }
+
     if (!res.ok) return null;
     const data = await res.json();
     return data.user;
