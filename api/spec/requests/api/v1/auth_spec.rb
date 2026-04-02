@@ -96,6 +96,22 @@ RSpec.describe "Api::V1::Auth", type: :request do
       expect(response.cookies["refresh_token"]).to be_present
       expect(response.cookies["csrf_token"]).to be_present
     end
+
+    it "sets SameSite=Lax on cookies in non-production" do
+      post "/api/v1/auth/guest"
+
+      cookie_str = response.header["Set-Cookie"].to_s.downcase
+      expect(cookie_str).to include("samesite=lax")
+    end
+
+    it "uses SameSite=None in production cookie_options" do
+      controller = Api::V1::AuthController.new
+      allow(Rails).to receive(:env).and_return(ActiveSupport::EnvironmentInquirer.new("production"))
+
+      opts = controller.send(:cookie_options)
+      expect(opts[:same_site]).to eq(:None)
+      expect(opts[:secure]).to eq(true)
+    end
   end
 
   describe "GET /api/v1/auth/me" do

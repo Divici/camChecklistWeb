@@ -60,11 +60,11 @@ module Api
         end
 
         user = result[:user]
-        cookies[:access_token] = COOKIE_OPTIONS.merge(
+        cookies[:access_token] = cookie_options.merge(
           value: JwtService.encode(user.id),
           expires: 15.minutes.from_now
         )
-        cookies[:refresh_token] = COOKIE_OPTIONS.merge(
+        cookies[:refresh_token] = cookie_options.merge(
           value: result[:token],
           expires: 30.days.from_now
         )

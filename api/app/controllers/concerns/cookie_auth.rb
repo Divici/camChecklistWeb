@@ -1,24 +1,26 @@
 module CookieAuth
   extend ActiveSupport::Concern
 
-  COOKIE_OPTIONS = {
-    httponly: true,
-    secure: Rails.env.production?,
-    same_site: :Lax,
-    path: "/"
-  }.freeze
-
   private
+
+  def cookie_options
+    {
+      httponly: true,
+      secure: Rails.env.production?,
+      same_site: Rails.env.production? ? :None : :Lax,
+      path: "/"
+    }
+  end
 
   def set_auth_cookies(user)
     access_token = JwtService.encode(user.id)
     refresh_token = JwtService.generate_refresh_token(user)
 
-    cookies[:access_token] = COOKIE_OPTIONS.merge(
+    cookies[:access_token] = cookie_options.merge(
       value: access_token,
       expires: 15.minutes.from_now
     )
-    cookies[:refresh_token] = COOKIE_OPTIONS.merge(
+    cookies[:refresh_token] = cookie_options.merge(
       value: refresh_token,
       expires: 30.days.from_now
     )
@@ -31,7 +33,7 @@ module CookieAuth
   end
 
   def set_csrf_cookie(user_id)
-    cookies[:csrf_token] = COOKIE_OPTIONS.merge(
+    cookies[:csrf_token] = cookie_options.merge(
       value: generate_csrf_token(user_id),
       httponly: false
     )
