@@ -90,10 +90,16 @@ export const handlers = [
     return HttpResponse.json({ user: mockUser });
   }),
   http.post(`${API}/auth/google`, () => {
-    return HttpResponse.json({ token: "mock-jwt-token", user: mockUser });
+    return HttpResponse.json({ user: mockUser });
   }),
   http.post(`${API}/auth/guest`, () => {
-    return HttpResponse.json({ token: "mock-guest-token", user: mockGuestUser });
+    return HttpResponse.json({ user: mockGuestUser });
+  }),
+  http.post(`${API}/auth/refresh`, () => {
+    return HttpResponse.json({ user: mockUser });
+  }),
+  http.delete(`${API}/auth/logout`, () => {
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // Projects

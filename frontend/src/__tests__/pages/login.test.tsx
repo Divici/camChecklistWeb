@@ -35,7 +35,8 @@ describe("LoginPage", () => {
   it("shows loading spinner when isLoading is true", () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      token: null,
+
+
       isLoading: true,
       loginWithGoogle: vi.fn(),
       loginAsGuest: vi.fn(),
@@ -51,7 +52,8 @@ describe("LoginPage", () => {
   it("renders Google login button and guest button when not authenticated", () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      token: null,
+
+
       isLoading: false,
       loginWithGoogle: vi.fn(),
       loginAsGuest: vi.fn(),
@@ -69,7 +71,8 @@ describe("LoginPage", () => {
 
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      token: null,
+
+
       isLoading: false,
       loginWithGoogle: vi.fn(),
       loginAsGuest: mockLoginAsGuest,
@@ -92,7 +95,8 @@ describe("LoginPage", () => {
         provider: "google",
         avatar_url: null,
       },
-      token: "mock-token",
+
+
       isLoading: false,
       loginWithGoogle: vi.fn(),
       loginAsGuest: vi.fn(),
@@ -109,7 +113,8 @@ describe("LoginPage", () => {
   it("shows app name CamChecklist", () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      token: null,
+
+
       isLoading: false,
       loginWithGoogle: vi.fn(),
       loginAsGuest: vi.fn(),

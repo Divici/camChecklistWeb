@@ -12,7 +12,6 @@ function wrapper({ children }: { children: ReactNode }) {
 
 describe("useAuth", () => {
   it("throws when used outside AuthProvider", () => {
-    // Suppress console.error for the expected error
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     expect(() => {
@@ -30,7 +29,7 @@ describe("useAuth", () => {
     });
   });
 
-  it("loginAsGuest stores token and sets user", async () => {
+  it("loginAsGuest sets user from response", async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
@@ -41,14 +40,36 @@ describe("useAuth", () => {
       await result.current.loginAsGuest();
     });
 
-    expect(localStorage.getItem("auth_token")).toBe("mock-guest-token");
     expect(result.current.user).toEqual(
       expect.objectContaining({ provider: "guest" })
     );
-    expect(result.current.token).toBe("mock-guest-token");
   });
 
-  it("loginWithGoogle stores token and sets user", async () => {
+  it("loginAsGuest sends credentials: include", async () => {
+    let capturedCredentials: RequestCredentials | undefined;
+    server.use(
+      http.post(`${API}/auth/guest`, ({ request }) => {
+        capturedCredentials = request.credentials;
+        return HttpResponse.json({
+          user: { id: 2, email: null, name: "Guest", avatar_url: null, provider: "guest" },
+        });
+      })
+    );
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.loginAsGuest();
+    });
+
+    expect(capturedCredentials).toBe("include");
+  });
+
+  it("loginWithGoogle sets user from response", async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
@@ -59,14 +80,20 @@ describe("useAuth", () => {
       await result.current.loginWithGoogle("mock-google-id-token");
     });
 
-    expect(localStorage.getItem("auth_token")).toBe("mock-jwt-token");
     expect(result.current.user).toEqual(
       expect.objectContaining({ provider: "google" })
     );
-    expect(result.current.token).toBe("mock-jwt-token");
   });
 
-  it("logout clears token and user", async () => {
+  it("logout clears user and calls logout endpoint", async () => {
+    let logoutCalled = false;
+    server.use(
+      http.delete(`${API}/auth/logout`, () => {
+        logoutCalled = true;
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
@@ -80,35 +107,28 @@ describe("useAuth", () => {
     expect(result.current.user).not.toBeNull();
 
     // Logout
-    act(() => {
+    await act(async () => {
       result.current.logout();
     });
 
+    await waitFor(() => {
+      expect(logoutCalled).toBe(true);
+    });
     expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
-    expect(localStorage.getItem("auth_token")).toBeNull();
   });
 
-  it("restores user from localStorage on mount", async () => {
-    localStorage.setItem("auth_token", "valid-token");
-
-    // The default /auth/me handler returns mockUser for any request
-    // Override to check for our specific token
+  it("restores user from cookie session on mount via /auth/me", async () => {
     server.use(
-      http.get(`${API}/auth/me`, ({ request }) => {
-        const auth = request.headers.get("Authorization");
-        if (auth === "Bearer valid-token") {
-          return HttpResponse.json({
-            user: {
-              id: 1,
-              email: "restored@example.com",
-              name: "Restored User",
-              avatar_url: null,
-              provider: "google",
-            },
-          });
-        }
-        return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
+      http.get(`${API}/auth/me`, () => {
+        return HttpResponse.json({
+          user: {
+            id: 1,
+            email: "restored@example.com",
+            name: "Restored User",
+            avatar_url: null,
+            provider: "google",
+          },
+        });
       })
     );
 
@@ -121,12 +141,9 @@ describe("useAuth", () => {
     expect(result.current.user).toEqual(
       expect.objectContaining({ email: "restored@example.com" })
     );
-    expect(result.current.token).toBe("valid-token");
   });
 
-  it("clears invalid token on mount when /auth/me returns 401", async () => {
-    localStorage.setItem("auth_token", "invalid-token");
-
+  it("sets user to null on mount when /auth/me returns 401", async () => {
     server.use(
       http.get(`${API}/auth/me`, () => {
         return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -140,7 +157,5 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
-    expect(localStorage.getItem("auth_token")).toBeNull();
   });
 });

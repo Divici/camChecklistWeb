@@ -5,39 +5,73 @@ import { http, HttpResponse } from "msw";
 const API = "http://localhost:3001/api/v1";
 
 describe("apiFetch", () => {
-  it("sends Authorization header when token exists in localStorage", async () => {
-    let capturedAuth: string | null = null;
+  it("sends credentials: include on requests", async () => {
+    let capturedCredentials: RequestCredentials | undefined;
     server.use(
       http.get(`${API}/test`, ({ request }) => {
-        capturedAuth = request.headers.get("Authorization");
-        return HttpResponse.json({ ok: true });
-      })
-    );
-
-    localStorage.setItem("auth_token", "my-token");
-    await apiFetch("/test");
-
-    expect(capturedAuth).toBe("Bearer my-token");
-  });
-
-  it("omits Authorization header when no token in localStorage", async () => {
-    let capturedAuth: string | null = null;
-    server.use(
-      http.get(`${API}/test`, ({ request }) => {
-        capturedAuth = request.headers.get("Authorization");
+        capturedCredentials = request.credentials;
         return HttpResponse.json({ ok: true });
       })
     );
 
     await apiFetch("/test");
 
-    expect(capturedAuth).toBeNull();
+    expect(capturedCredentials).toBe("include");
   });
 
-  it("clears token and throws on 401 response", async () => {
-    localStorage.setItem("auth_token", "expired-token");
+  it("sends X-CSRF-Token header when csrf_token cookie exists", async () => {
+    // Set a csrf_token cookie
+    Object.defineProperty(document, "cookie", {
+      value: "csrf_token=test-csrf-value",
+      writable: true,
+      configurable: true,
+    });
 
-    // Mock window.location to prevent actual navigation
+    let capturedCsrf: string | null = null;
+    server.use(
+      http.get(`${API}/test-csrf`, ({ request }) => {
+        capturedCsrf = request.headers.get("X-CSRF-Token");
+        return HttpResponse.json({ ok: true });
+      })
+    );
+
+    await apiFetch("/test-csrf");
+
+    expect(capturedCsrf).toBe("test-csrf-value");
+
+    // Clean up
+    Object.defineProperty(document, "cookie", {
+      value: "",
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("retries with refresh on 401 then succeeds", async () => {
+    let requestCount = 0;
+    let refreshCalled = false;
+
+    server.use(
+      http.get(`${API}/protected`, () => {
+        requestCount++;
+        if (requestCount === 1) {
+          return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        return HttpResponse.json({ data: "success" });
+      }),
+      http.post(`${API}/auth/refresh`, () => {
+        refreshCalled = true;
+        return HttpResponse.json({ user: { id: 1 } });
+      })
+    );
+
+    const result = await apiFetch<{ data: string }>("/protected");
+
+    expect(refreshCalled).toBe(true);
+    expect(result).toEqual({ data: "success" });
+  });
+
+  it("redirects to /login after failed refresh on 401", async () => {
     const originalLocation = window.location;
     const mockLocation = { ...originalLocation, href: originalLocation.href };
     Object.defineProperty(window, "location", {
@@ -49,13 +83,15 @@ describe("apiFetch", () => {
     server.use(
       http.get(`${API}/protected`, () => {
         return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }),
+      http.post(`${API}/auth/refresh`, () => {
+        return HttpResponse.json({ error: "Invalid" }, { status: 401 });
       })
     );
 
     await expect(apiFetch("/protected")).rejects.toThrow("Unauthorized");
-    expect(localStorage.getItem("auth_token")).toBeNull();
+    expect(mockLocation.href).toBe("/login");
 
-    // Restore original location
     Object.defineProperty(window, "location", {
       value: originalLocation,
       writable: true,

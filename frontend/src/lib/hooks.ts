@@ -276,13 +276,17 @@ export function usePhotoCheck(checklistId: number | string, projectId?: number |
     mutationFn: async (imageFile: File) => {
       const formData = new FormData();
       formData.append("image", imageFile);
-      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+      const csrfMatch = typeof document !== "undefined"
+        ? document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/)
+        : null;
+      const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : null;
       const res = await fetch(
         `${API_BASE}/api/v1/checklists/${checklistId}/photo`,
         {
           method: "POST",
           body: formData,
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          credentials: "include",
+          headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
         }
       );
       if (!res.ok) {

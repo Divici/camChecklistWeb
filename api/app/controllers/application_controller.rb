@@ -1,10 +1,15 @@
 class ApplicationController < ActionController::API
+  include ActionController::Cookies
+  include CookieAuth
+
   before_action :authenticate_user!
+  before_action :verify_csrf_token!
 
   private
 
   def authenticate_user!
-    token = request.headers["Authorization"]&.split(" ")&.last
+    token = cookies[:access_token] || extract_bearer_token
+
     unless token
       return render json: { error: "Unauthorized" }, status: :unauthorized
     end
@@ -18,6 +23,10 @@ class ApplicationController < ActionController::API
     unless @current_user
       return render json: { error: "Unauthorized" }, status: :unauthorized
     end
+  end
+
+  def extract_bearer_token
+    request.headers["Authorization"]&.split(" ")&.last
   end
 
   def current_user

@@ -21,7 +21,8 @@ vi.mock("next/navigation", () => ({
 beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     user: null,
-    token: null,
+
+
     isLoading: false,
     loginWithGoogle: vi.fn(),
     loginAsGuest: vi.fn(),
@@ -44,7 +45,8 @@ describe("AuthGuard", () => {
   it("shows loading spinner when isLoading is true", () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
-      token: null,
+  
+
       isLoading: true,
       loginWithGoogle: vi.fn(),
       loginAsGuest: vi.fn(),
@@ -77,7 +79,8 @@ describe("AuthGuard", () => {
   it("renders children when user exists", () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { id: 1, email: "test@test.com", name: "Test", avatar_url: null, provider: "google" },
-      token: "tok",
+
+
       isLoading: false,
       loginWithGoogle: vi.fn(),
       loginAsGuest: vi.fn(),

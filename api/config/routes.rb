@@ -11,6 +11,8 @@ Rails.application.routes.draw do
         post :google
         post :guest
         get :me
+        post :refresh
+        delete :logout
       end
       resources :projects do
         resources :checklists, only: [:index, :show, :create, :update, :destroy]

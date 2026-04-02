@@ -27,7 +27,6 @@ vi.mock("@/lib/auth", () => ({
       provider: "google",
       avatar_url: null,
     },
-    token: "mock-token",
     isLoading: false,
     loginWithGoogle: vi.fn(),
     loginAsGuest: vi.fn(),
@@ -37,7 +36,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 beforeEach(() => {
-  localStorage.setItem("auth_token", "mock-token");
+  // No localStorage setup needed -- auth is cookie-based
 });
 
 describe("ChecklistPage", () => {

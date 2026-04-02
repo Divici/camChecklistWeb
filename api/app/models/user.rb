@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   has_many :projects, dependent: :destroy
+  has_many :refresh_tokens, dependent: :destroy
   has_many :checklists, through: :projects
   has_many :items, through: :checklists
 
